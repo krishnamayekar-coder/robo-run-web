@@ -1,4 +1,4 @@
-name: Build & Deploy to EC2
+name: Build & Deploy React App to EC2
 
 on:
   push:
@@ -7,19 +7,20 @@ on:
 
 jobs:
   deploy:
+    name: Build and Deploy to EC2 (Nginx)
     runs-on: ubuntu-latest
 
     steps:
       # --------------------
-      # Checkout repo. 
+      # Checkout repo
       # --------------------
-      - name: Checkout code
+      - name: Checkout source code
         uses: actions/checkout@v4
 
       # --------------------
       # Node 20
       # --------------------
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -31,20 +32,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build app
+      - name: Build React app
         run: npm run build
 
       # --------------------
       # Install rsync + ssh
       # --------------------
-      - name: Install rsync & ssh
+      - name: Install rsync and SSH client
         run: sudo apt-get update && sudo apt-get install -y rsync openssh-client
 
       # --------------------
       # SSH key setup
-      # EC2_SSH_PRIVATE_KEY_B64 = base64 of .pem
       # --------------------
-      - name: Setup SSH
+      - name: Configure SSH access to EC2
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY_B64 }}" | base64 -d > ~/.ssh/id_rsa
@@ -54,13 +54,13 @@ jobs:
       # --------------------
       # Sanity check
       # --------------------
-      - name: Test SSH
+      - name: Verify EC2 SSH connection
         run: ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "whoami"
 
       # --------------------
       # Upload build
       # --------------------
-      - name: Rsync build to EC2
+      - name: Upload build artifacts to EC2
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/react-build"
           rsync -avz --delete \
@@ -70,7 +70,7 @@ jobs:
       # --------------------
       # Deploy to nginx
       # --------------------
-      - name: Deploy to Nginx
+      - name: Deploy React app to Nginx
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
             sudo mkdir -p /usr/share/nginx/html &&
