@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI WorkTracker | Team Analytics Dashboard</title>
+    <meta name="description" content="AI-powered team productivity analytics. Track sprints, detect risks, and get actionable insights for your development team." />
+    <meta name="author" content="AI WorkTracker" />
+
+    <meta property="og:title" content="AI WorkTracker | Team Analytics Dashboard" />
+    <meta property="og:description" content="AI-powered team productivity analytics. Track sprints, detect risks, and get actionable insights." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@AIWorkTracker" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
