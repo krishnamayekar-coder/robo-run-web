@@ -11,7 +11,7 @@ jobs:
 
     steps:
       # --------------------
-      # Checkout repo
+      # Checkout repo. 
       # --------------------
       - name: Checkout code
         uses: actions/checkout@v4
