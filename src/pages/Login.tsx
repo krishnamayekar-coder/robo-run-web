@@ -81,7 +81,7 @@ function Login() {
           
           <div className="w-full sm:w-1/2 bg-gradient-to-br from-primary to-primary/80 text-white p-8 sm:p-[60px] flex flex-col justify-center backdrop-blur-sm">
             <h2 className="text-2xl sm:text-[32px] mb-5 font-semibold">
-              Track team activity in real time test
+              Track team activity in real time
             </h2>
             <p className="text-base sm:text-[17px] leading-relaxed">
               Activity Tracker helps managers monitor active members,
