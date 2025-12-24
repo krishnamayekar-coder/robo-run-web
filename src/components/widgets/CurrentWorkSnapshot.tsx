@@ -22,7 +22,8 @@ interface CurrentWorkSnapshotProps {
   isPersonal?: boolean;
 }
 
-function getInitials(name: string): string {
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "??";
   return name
     .split(" ")
     .map((n) => n[0])
@@ -39,7 +40,8 @@ function formatTimeAgo(timestamp: string): string {
   }
 }
 
-function mapPriority(priority: string): "critical" | "high" | "medium" | "low" {
+function mapPriority(priority: string | null | undefined): "critical" | "high" | "medium" | "low" {
+  if (!priority) return "low";
   const lower = priority.toLowerCase();
   if (lower.includes("critical") || lower.includes("highest")) return "critical";
   if (lower.includes("high")) return "high";
@@ -67,7 +69,7 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
     title: item.raw?.fields?.summary || "Issue",
     priority: mapPriority(item.priority),
     assignee: {
-      name: item.assignee,
+      name: item.assignee || "Unassigned",
       initials: getInitials(item.assignee),
     },
     status: item.status,
@@ -86,17 +88,27 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
     lastUpdate: formatTimeAgo(pr.timestamp),
   })) || [];
 
-  const commitItems: WorkItem[] = gitData?.recent_commits?.slice(0, 5).map((commit) => ({
-    id: commit.commit_sha?.substring(0, 7) || "N/A",
-    title: commit.message || "Commit",
-    priority: "medium" as const,
-    assignee: {
-      name: commit.author_email?.split("@")[0] || "Unknown",
-      initials: getInitials(commit.author_email?.split("@")[0] || "Unknown"),
-    },
-    status: commit.repo?.split("/").pop() || "repo",
-    lastUpdate: formatTimeAgo(commit.timestamp),
-  })) || [];
+  const commitItems: WorkItem[] = gitData?.recent_commits?.slice(0, 5).map((commit: any) => {
+    // Handle different API response structures
+    const commitId = commit.commit_sha || commit.commit_id || "N/A";
+    const commitMessage = commit.message || commit.commit_message || "Commit";
+    const authorEmail = commit.author_email || commit.author || "";
+    const authorName = authorEmail.includes("@") 
+      ? authorEmail.split("@")[0] 
+      : authorEmail.split("/").pop() || "Unknown";
+    
+    return {
+      id: typeof commitId === "string" && commitId.length > 7 ? commitId.substring(0, 7) : commitId,
+      title: commitMessage,
+      priority: "medium" as const,
+      assignee: {
+        name: authorName,
+        initials: getInitials(authorName),
+      },
+      status: commit.repo?.split("/").pop() || "repo",
+      lastUpdate: formatTimeAgo(commit.timestamp),
+    };
+  }) || [];
 
   const isLoading = jiraLoading || gitLoading;
 
@@ -182,8 +194,8 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
               <div className="text-sm text-muted-foreground p-3 text-center">No Jira items</div>
             ) : (
               <div className="space-y-1">
-                {jiraItems.map((item) => (
-                  <WorkItemRow key={item.id} item={item} />
+                {jiraItems.map((item, index) => (
+                  <WorkItemRow key={item.id || `jira-${index}`} item={item} />
                 ))}
               </div>
             )}
@@ -194,8 +206,8 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
               <div className="text-sm text-muted-foreground p-3 text-center">No commits</div>
             ) : (
               <div className="space-y-1">
-                {commitItems.map((item) => (
-                  <WorkItemRow key={item.id} item={item} />
+                {commitItems.map((item, index) => (
+                  <WorkItemRow key={item.id || `commit-${index}`} item={item} />
                 ))}
               </div>
             )}
@@ -206,8 +218,8 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
               <div className="text-sm text-muted-foreground p-3 text-center">No pull requests</div>
             ) : (
               <div className="space-y-1">
-                {prItems.map((item) => (
-                  <WorkItemRow key={item.id} item={item} />
+                {prItems.map((item, index) => (
+                  <WorkItemRow key={item.id || `pr-${index}`} item={item} />
                 ))}
               </div>
             )}

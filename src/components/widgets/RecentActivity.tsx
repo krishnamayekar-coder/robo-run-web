@@ -88,18 +88,32 @@ export function RecentActivity({ isPersonal = false }: RecentActivityProps) {
     }
 
     if (gitData?.recent_commits) {
-      gitData.recent_commits.forEach((commit) => {
-        const emailPart = commit.author_email?.split("@")[0] || "unknown";
-        const name = emailPart.replace(/\./g, " ") || "Unknown";
+      gitData.recent_commits.forEach((commit: any, index: number) => {
+        // Handle different API response structures
+        const commitId = commit.id || commit.commit_id || `commit-${index}-${Date.now()}`;
+        const commitMessage = commit.message || commit.commit_message || "commit";
+        const authorEmail = commit.author_email || commit.author || "";
+        let name = "Unknown";
+        
+        if (authorEmail) {
+          if (authorEmail.includes("@")) {
+            name = authorEmail.split("@")[0].replace(/\./g, " ");
+          } else if (authorEmail.includes("/")) {
+            name = authorEmail.split("/").pop() || "Unknown";
+          } else {
+            name = authorEmail;
+          }
+        }
+        
         allActivities.push({
-          id: commit.id,
+          id: commitId,
           type: "commit",
           user: {
             name: name,
             initials: getInitials(name),
           },
           action: "committed",
-          target: commit.message || "commit",
+          target: commitMessage,
           time: formatTimeAgo(commit.timestamp),
           timestamp: commit.timestamp,
         });
@@ -166,13 +180,13 @@ export function RecentActivity({ isPersonal = false }: RecentActivityProps) {
         ) : displayActivities.length === 0 ? (
           <div className="text-sm text-muted-foreground p-3">No recent activity</div>
         ) : (
-          displayActivities.map((activity) => {
+          displayActivities.map((activity, index) => {
           const config = typeConfig[activity.type];
           const Icon = config.icon;
 
           return (
             <div 
-              key={activity.id} 
+              key={activity.id || `activity-${index}`} 
               className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
             >
               <Avatar className="h-8 w-8 border border-border">
@@ -224,13 +238,13 @@ export function RecentActivity({ isPersonal = false }: RecentActivityProps) {
               ) : allActivities.length === 0 ? (
                 <div className="text-sm text-muted-foreground p-3 text-center">No recent activity</div>
               ) : (
-                allActivities.map((activity) => {
+                allActivities.map((activity, index) => {
                   const config = typeConfig[activity.type];
                   const Icon = config.icon;
 
                   return (
                     <div 
-                      key={activity.id} 
+                      key={activity.id || `activity-${index}`} 
                       className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
                     >
                       <Avatar className="h-8 w-8 border border-border">
