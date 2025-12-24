@@ -21,6 +21,7 @@ interface RiskItem {
   impactScore: number;
   mitigation: string;
   url?: string;
+  state?: string;
 }
 
 interface DetailedRiskDetectionProps {
@@ -52,7 +53,6 @@ export function DetailedRiskDetection({ isPersonal = false }: DetailedRiskDetect
   const { data: bottlenecksData, isLoading } = useGetPRBottlenecksQuery();
 
   const allRisks: RiskItem[] = (bottlenecksData?.bottlenecks || [])
-    .filter(pr => pr.state === "open")
     .map((pr) => ({
       id: `pr-${pr.pr_number}`,
       title: `PR #${pr.pr_number}: ${pr.title}`,
@@ -62,8 +62,14 @@ export function DetailedRiskDetection({ isPersonal = false }: DetailedRiskDetect
       impactScore: calculateImpactScore(pr.idle_days, pr.total_changes),
       mitigation: getMitigation(pr.idle_days, pr.state),
       url: pr.url,
+      state: pr.state, // Include state for conditional rendering
     }))
-    .sort((a, b) => b.impactScore - a.impactScore);
+    .sort((a, b) => {
+      // Sort open PRs first, then by impact score
+      if (a.state === "open" && b.state !== "open") return -1;
+      if (a.state !== "open" && b.state === "open") return 1;
+      return b.impactScore - a.impactScore;
+    });
 
   const displayRisks = allRisks.slice(0, 3);
 
@@ -82,7 +88,8 @@ export function DetailedRiskDetection({ isPersonal = false }: DetailedRiskDetect
         </h2>
         <div className="flex gap-2">
           {["critical", "high", "medium"].map((sev) => {
-            const count = allRisks.filter((r) => r.severity === sev).length;
+            // Only count open PRs in badges
+            const count = allRisks.filter((r) => r.severity === sev && r.state === "open").length;
             if (count === 0) return null;
             const config = severityConfig[sev as keyof typeof severityConfig];
             return (
@@ -121,6 +128,9 @@ export function DetailedRiskDetection({ isPersonal = false }: DetailedRiskDetect
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-foreground">{risk.title}</span>
                       <Badge variant="secondary" className="text-[10px]">{risk.type}</Badge>
+                      {risk.state === "closed" && (
+                        <Badge variant="outline" className="text-[10px] bg-muted">Closed</Badge>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">{risk.description}</p>
                   </div>
@@ -195,6 +205,9 @@ export function DetailedRiskDetection({ isPersonal = false }: DetailedRiskDetect
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-foreground">{risk.title}</span>
                               <Badge variant="secondary" className="text-[10px]">{risk.type}</Badge>
+                              {risk.state === "closed" && (
+                                <Badge variant="outline" className="text-[10px] bg-muted">Closed</Badge>
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground mt-0.5">{risk.description}</p>
                           </div>

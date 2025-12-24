@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { idToken } from '../tokenmanager';
+import { getAuthToken } from '@/lib/auth';
 import type {
   RecentActivityResponse,
   GitRecentResponse,
@@ -13,20 +13,6 @@ import type {
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
 const API_KEY = import.meta.env.VITE_API_KEY || 'my-secret-api-key';
-
-const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('idToken');
-    if (stored) return stored;
-    
-    const envToken = import.meta.env.VITE_AUTH_TOKEN;
-    if (envToken) return envToken;
-    
-    const oldStored = localStorage.getItem('authToken');
-    if (oldStored) return oldStored;
-  }
-  return idToken;
-};
 
 export const api = createApi({
   reducerPath: 'api',
@@ -42,6 +28,9 @@ export const api = createApi({
       return headers;
     },
   }),
+  // Auto-refetch queries on window focus to keep data fresh
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution', 'SprintLoadOverview'],
   endpoints: (builder) => ({
     getRecentActivity: builder.query<RecentActivityResponse, { from_date: string; to_date: string }>({

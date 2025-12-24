@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { isTokenValid } from "@/lib/auth";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -17,8 +18,8 @@ function Login() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const idToken = localStorage.getItem('idToken');
-    if (idToken) {
+    // Only redirect if token exists and is valid (not expired)
+    if (isTokenValid()) {
       navigate('/dashboard', { replace: true });
     }
   }, [navigate]);
