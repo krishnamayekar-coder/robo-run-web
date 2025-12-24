@@ -143,7 +143,45 @@ export interface WorkloadItem {
   max_idle_days: number;
 }
 
-export type WorkloadDistributionResponse = WorkloadItem[];
+export interface FocusToday {
+  active_jira_tickets: number;
+  high_priority_tickets: number;
+  prs_awaiting_review: number;
+  subtasks: number;
+}
+
+export interface SprintLoadOverviewItem {
+  name: string;
+  role: string;
+  assigned_story_points: number;
+  avg_story_points_last_3_sprints: number;
+  load_label: string;
+  tooltip: string;
+  focus_today: FocusToday;
+}
+
+export interface SprintLoadSummary {
+  overloaded_count: number | null;
+}
+
+export interface WorkloadPullRequest {
+  pr_id: string;
+  repo: string;
+  pr_number: number;
+  title: string;
+  status: string;
+  author: string;
+  jira_ticket: string | null;
+  created: string;
+  ci_status: string | null;
+  duration: string;
+  description: string | null;
+}
+
+export interface WorkloadDistributionResponse {
+  workload: WorkloadItem[];
+  pull_requests: WorkloadPullRequest[];
+}
 
 export interface LoginRequest {
   email: string;

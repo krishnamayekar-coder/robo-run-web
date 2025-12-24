@@ -42,7 +42,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution'],
+  tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution', 'SprintLoadOverview'],
   endpoints: (builder) => ({
     getRecentActivity: builder.query<RecentActivityResponse, { from_date: string; to_date: string }>({
       query: ({ from_date, to_date }) => ({
@@ -74,7 +74,7 @@ export const api = createApi({
     
     getWorkloadDistribution: builder.query<WorkloadDistributionResponse, void>({
       query: () => '/developers/workload',
-      providesTags: ['WorkloadDistribution'],
+      providesTags: ['WorkloadDistribution', 'SprintLoadOverview'],
     }),
     
     login: builder.mutation<LoginResponse, LoginRequest>({
@@ -130,5 +130,8 @@ export type {
   PRBottlenecksResponse,
   WorkloadItem,
   WorkloadDistributionResponse,
+  SprintLoadOverviewItem,
+  FocusToday,
+  SprintLoadSummary,
 } from './types';
 
