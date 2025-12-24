@@ -1,13 +1,17 @@
 import { Navigate } from "react-router-dom";
+import { isTokenValid } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const idToken = localStorage.getItem('idToken');
+  // Use the auth hook to track activity and validate token
+  useAuth();
   
-  if (!idToken) {
+  // Check if token exists and is valid (not expired)
+  if (!isTokenValid()) {
     return <Navigate to="/login" replace />;
   }
   
