@@ -202,3 +202,68 @@ export interface LoginResponse {
   auth_result: AuthResult;
 }
 
+// Integration Sources Types
+export type IntegrationType = "jira" | "github" | "confluence" | "slack" | "gitlab";
+
+export type IntegrationStatus = "connected" | "disconnected" | "error" | "syncing";
+
+export interface IntegrationSource {
+  id: string;
+  type: IntegrationType;
+  name: string;
+  status: IntegrationStatus;
+  connected_at: string | null;
+  last_sync: string | null;
+  project_id: string | null; // null if global integration
+  config: {
+    base_url?: string;
+    workspace?: string;
+    repository?: string;
+    organization?: string;
+  };
+  error_message?: string;
+}
+
+export interface IntegrationSourcesResponse {
+  integrations: IntegrationSource[];
+  total_connected: number;
+  total_disconnected: number;
+}
+
+export interface ConnectIntegrationRequest {
+  type: IntegrationType;
+  project_id?: string;
+  config: Record<string, any>;
+}
+
+export interface SyncIntegrationResponse {
+  success: boolean;
+  message: string;
+  last_sync: string;
+}
+
+// Team Members Types
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar_url?: string;
+  project_id: string;
+  project_name: string;
+  open_issues: number;
+  high_priority_issues: number;
+  commits_count: number;
+  prs_count: number;
+  prs_open: number;
+  last_active: string;
+  workload_status: "balanced" | "high" | "overloaded";
+}
+
+export interface TeamMembersResponse {
+  project_id: string;
+  project_name: string;
+  members: TeamMember[];
+  total_members: number;
+}
+
