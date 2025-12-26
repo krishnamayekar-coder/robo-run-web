@@ -11,6 +11,8 @@ import { RecentActivity } from "@/components/widgets/RecentActivity";
 import { DetailedRiskDetection } from "@/components/widgets/DetailedRiskDetection";
 import { ConfluenceContributions } from "@/components/widgets/ConfluenceContributions";
 import { AIAssistant } from "@/components/widgets/AIAssistant";
+import { IntegrationSources } from "@/components/widgets/IntegrationSources";
+import { TeamMembers } from "@/components/widgets/TeamMembers";
 import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
 import { CustomiseDrawer, WidgetConfig } from "@/components/CustomiseDrawer";
@@ -30,6 +32,8 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "ai-insights", name: "AI Summary Insights", icon: "✨", visible: true, order: 7 },
   { id: "recent-activity", name: "Recent Activity", icon: "🕐", visible: true, order: 8 },
   { id: "confluence", name: "Confluence Contributions", icon: "📝", visible: true, order: 9 },
+  { id: "integrations", name: "Integration Sources", icon: "🔌", visible: true, order: 10 },
+  { id: "team-members", name: "Team Members", icon: "👥", visible: true, order: 11 },
 ];
 
 const PROJECTS = [
@@ -70,9 +74,11 @@ export default function Dashboard() {
       "ai-insights": { component: <AISummaryInsights key="ai-insights" isPersonal={isMyDashboard} />, column: "right" },
       "recent-activity": { component: <RecentActivity key="recent-activity" isPersonal={isMyDashboard} />, column: "right" },
       "confluence": { component: <ConfluenceContributions key="confluence" isPersonal={isMyDashboard} />, column: "right" },
+      "integrations": { component: <IntegrationSources key="integrations" isPersonal={isMyDashboard} />, column: "right" },
+      "team-members": { component: <TeamMembers key="team-members" projectId={selectedProject} isPersonal={isMyDashboard} />, column: "right" },
     };
     return map;
-  }, [isMyDashboard]);
+  }, [isMyDashboard, selectedProject]);
 
   const leftWidgets = useMemo(() => {
     return widgets
