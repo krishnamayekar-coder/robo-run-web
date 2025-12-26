@@ -9,6 +9,11 @@ import type {
   WorkloadDistributionResponse,
   LoginRequest,
   LoginResponse,
+  IntegrationSourcesResponse,
+  IntegrationSource,
+  ConnectIntegrationRequest,
+  SyncIntegrationResponse,
+  TeamMembersResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
@@ -31,7 +36,7 @@ export const api = createApi({
   // Auto-refetch queries on window focus to keep data fresh
   refetchOnFocus: true,
   refetchOnReconnect: true,
-  tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution', 'SprintLoadOverview'],
+  tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution', 'SprintLoadOverview', 'IntegrationSources', 'TeamMembers'],
   endpoints: (builder) => ({
     getRecentActivity: builder.query<RecentActivityResponse, { from_date: string; to_date: string }>({
       query: ({ from_date, to_date }) => ({
@@ -64,6 +69,43 @@ export const api = createApi({
     getWorkloadDistribution: builder.query<WorkloadDistributionResponse, void>({
       query: () => '/developers/workload',
       providesTags: ['WorkloadDistribution', 'SprintLoadOverview'],
+    }),
+    
+    getTeamMembers: builder.query<TeamMembersResponse, { project_id: string }>({
+      query: ({ project_id }) => ({
+        url: `/projects/${project_id}/team-members`,
+      }),
+      providesTags: ['TeamMembers'],
+    }),
+    
+    getIntegrationSources: builder.query<IntegrationSourcesResponse, void>({
+      query: () => '/integrations',
+      providesTags: ['IntegrationSources'],
+    }),
+    
+    connectIntegration: builder.mutation<IntegrationSource, ConnectIntegrationRequest>({
+      query: (body) => ({
+        url: '/integrations/connect',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['IntegrationSources'],
+    }),
+    
+    disconnectIntegration: builder.mutation<void, { id: string }>({
+      query: ({ id }) => ({
+        url: `/integrations/${id}/disconnect`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['IntegrationSources'],
+    }),
+    
+    syncIntegration: builder.mutation<SyncIntegrationResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/integrations/${id}/sync`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['IntegrationSources'],
     }),
     
     login: builder.mutation<LoginResponse, LoginRequest>({
@@ -101,6 +143,11 @@ export const {
   useGetTeamInsightsQuery,
   useGetPRBottlenecksQuery,
   useGetWorkloadDistributionQuery,
+  useGetTeamMembersQuery,
+  useGetIntegrationSourcesQuery,
+  useConnectIntegrationMutation,
+  useDisconnectIntegrationMutation,
+  useSyncIntegrationMutation,
   useLoginMutation,
 } = api;
 
@@ -122,5 +169,13 @@ export type {
   SprintLoadOverviewItem,
   FocusToday,
   SprintLoadSummary,
+  TeamMember,
+  TeamMembersResponse,
+  IntegrationType,
+  IntegrationStatus,
+  IntegrationSource,
+  IntegrationSourcesResponse,
+  ConnectIntegrationRequest,
+  SyncIntegrationResponse,
 } from './types';
 
