@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaMicrosoft } from "react-icons/fa";
+import { Eye, EyeOff } from "lucide-react";
 import { useLoginMutation } from "@/store/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,17 +13,26 @@ import { isTokenValid } from "@/lib/auth";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isForgot, setIsForgot] = useState(false);
   const [login, { isLoading }] = useLoginMutation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  useEffect(() => {
+  // Clear form fields on mount and when location changes (e.g., after logout)
+  useLayoutEffect(() => {
     // Only redirect if token exists and is valid (not expired)
     if (isTokenValid()) {
       navigate('/dashboard', { replace: true });
+    } else {
+      // Clear form fields if no valid token (e.g., after logout)
+      setEmail("");
+      setPassword("");
+      setShowPassword(false);
+      setIsForgot(false);
     }
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   const handleSignin = async () => {
     if (!email || !password) {
@@ -42,6 +52,12 @@ function Login() {
         localStorage.setItem('userRole', result.role);
         localStorage.setItem('accessToken', result.auth_result.AccessToken);
         localStorage.setItem('refreshToken', result.auth_result.RefreshToken);
+        
+        // Clear all form fields for security before navigation
+        setEmail("");
+        setPassword("");
+        setShowPassword(false);
+        setIsForgot(false);
         
         toast({
           title: "Success",
@@ -115,15 +131,24 @@ function Login() {
                     </h3>
                   </p>
 
-                  <div className="space-y-4">
+                  <form 
+                    className="space-y-4"
+                    autoComplete="off"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSignin();
+                    }}
+                  >
                     <div>
                       <Label htmlFor="email" className="text-sm mb-1.5 block">
                         Email
                       </Label>
                       <Input
                         id="email"
+                        name="email"
                         type="email"
-                        placeholder="you@company.com"
+                        autoComplete="off"
+                        placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full"
@@ -142,24 +167,35 @@ function Login() {
                           Forgot password?
                         </span>
                       </div>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleSignin();
-                          }
-                        }}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          autoComplete="new-password"
+                          placeholder="Enter your password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     <Button
+                      type="submit"
                       className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-base rounded-[10px] mt-2.5"
-                      onClick={handleSignin}
                       disabled={isLoading}
                     >
                       {isLoading ? "Signing in..." : "Sign in"}
@@ -171,7 +207,8 @@ function Login() {
 
                     <Button
                       variant="outline"
-                      className="w-full py-3 flex items-center justify-center gap-2.5 border border-gray-300 bg-white hover:bg-gray-50 rounded-[10px]"
+                      disabled
+                      className="w-full py-3 flex items-center justify-center gap-2.5 border border-gray-300 bg-gray-100 hover:bg-gray-100 rounded-[10px] opacity-60 cursor-not-allowed"
                     >
                       <FcGoogle size={20} />
                       Continue with Google
@@ -179,7 +216,8 @@ function Login() {
 
                     <Button
                       variant="outline"
-                      className="w-full py-3 flex items-center justify-center gap-2.5 border border-gray-300 bg-white hover:bg-gray-50 rounded-[10px]"
+                      disabled
+                      className="w-full py-3 flex items-center justify-center gap-2.5 border border-gray-300 bg-gray-100 hover:bg-gray-100 rounded-[10px] opacity-60 cursor-not-allowed"
                     >
                       <FaMicrosoft size={18} color="#00A4EF" />
                       Continue with Microsoft
@@ -187,11 +225,12 @@ function Login() {
 
                     <Button
                       variant="outline"
-                      className="w-full py-3 border border-gray-300 bg-gray-100 hover:bg-gray-200 rounded-[10px]"
+                      disabled
+                      className="w-full py-3 border border-gray-300 bg-gray-100 hover:bg-gray-100 rounded-[10px] opacity-60 cursor-not-allowed"
                     >
                       Continue with SSO / OAuth
                     </Button>
-                  </div>
+                  </form>
                 </>
               ) : (
                 <>

@@ -38,6 +38,15 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const { toast } = useToast();
 
+  // Clear password fields when settings sheet opens
+  useEffect(() => {
+    if (open) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [open]);
+
   const handleUpdatePassword = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
@@ -254,10 +263,16 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
                 </Label>
                 <Input
                   id="current-password"
+                  name="current-password"
                   type="password"
+                  autoComplete="off"
                   placeholder="Enter your current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
+                  readOnly
+                  onFocus={(e) => {
+                    e.target.removeAttribute('readonly');
+                  }}
                 />
               </div>
 
@@ -267,10 +282,16 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
                 </Label>
                 <Input
                   id="new-password"
+                  name="new-password"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Enter your new password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  readOnly
+                  onFocus={(e) => {
+                    e.target.removeAttribute('readonly');
+                  }}
                 />
               </div>
 
@@ -280,10 +301,16 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
                 </Label>
                 <Input
                   id="confirm-password"
+                  name="confirm-password"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Confirm your new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  readOnly
+                  onFocus={(e) => {
+                    e.target.removeAttribute('readonly');
+                  }}
                 />
               </div>
 
