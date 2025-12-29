@@ -23,6 +23,14 @@ import { useNavigate } from "react-router-dom";
 import { Settings as SettingsDrawer } from "@/components/Settings";
 import logo from "@/assets/logo.png";
 import Notifications from "./Notifications";
+import {
+  connectWebSocket,
+  sendMessage,
+  fetchMessages,
+  onEvent,
+  resetConversationUnread,
+  offEvent,
+} from "../../hooks/useWebSocket";
 
 export type TimeFilterOption =
   | "today"
@@ -79,6 +87,61 @@ export function Header({
   const { data: gitData } = useGetGitRecentQuery();
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [fromNo, setFromNo] = useState("+15677723029"); //+15074100500
+  const [toNo, setToNo] = useState("+15203998695"); //+15203998695
+  const [messages, setMessages] = useState([]);
+  const [connected, setConnected] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (!fromNo || !toNo) return;
+
+    let isMounted = true;
+
+    async function init() {
+      try {
+        await connectWebSocket(fromNo, toNo);
+
+        if (!isMounted) return;
+
+        setConnected(true);
+
+        // Clear previous listeners first
+        offEvent("new_message", handleNewMessage);
+        offEvent("fetchedMessages", handleFetchedMessages);
+
+        // Register event listeners
+        onEvent("new_message", handleNewMessage);
+        onEvent("fetchedMessages", handleFetchedMessages);
+
+        fetchMessages(fromNo, toNo);
+      } catch (err) {
+        console.error("WebSocket connection failed:", err);
+      }
+    }
+
+    // Handlers
+    function handleNewMessage(data) {
+      console.log("new_message", data);
+      setToast(data.message);
+      setMessages((prev) => [...prev, data.message]);
+    }
+
+    function handleFetchedMessages(data) {
+      console.log("handleFetchedMessages", data);
+      setToast(data.message);
+
+      setMessages(data.messages || []);
+    }
+
+    init();
+
+    return () => {
+      isMounted = false;
+      offEvent("new_message", handleNewMessage);
+      offEvent("fetchedMessages", handleFetchedMessages);
+    };
+  }, [fromNo, toNo]);
 
   const [internalTimeFilter, setInternalTimeFilter] =
     useState<TimeFilterOption>(() => {
@@ -185,10 +248,30 @@ export function Header({
   ];
   const unreadCount = notifications.filter((n) => n.unread).length;
 
+  const toastStyle: React.CSSProperties = {
+    position: "fixed",
+    top: 20,
+    right: 20,
+    background: "#323232",
+    color: "#fff",
+    padding: "12px 16px",
+    borderRadius: 6,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    zIndex: 9999,
+    minWidth: 250,
+    animation: "fadeIn 0.3s ease",
+  };
+
   return (
     <>
-      <Notifications />
-
+      {toast && (
+        <div style={toastStyle}>
+          <strong>
+            {"New Message"} {toast.event}
+          </strong>
+          <div>{toast.summary}</div>
+        </div>
+      )}
       <header className="sticky top-0 z-50 w-full glass-header overflow-x-hidden">
         <div className="flex h-16 items-center justify-between px-3 sm:px-4 md:px-6 w-full">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
