@@ -21,6 +21,7 @@ import {
 import { useGetGitRecentQuery } from "@/store/api";
 import { useNavigate } from "react-router-dom";
 import { Settings as SettingsDrawer } from "@/components/Settings";
+import { clearAuthData } from "@/lib/auth";
 import logo from "@/assets/logo.png";
 import Notifications from "./Notifications";
 import {
@@ -196,11 +197,8 @@ export function Header({
   const userInitials = getInitials(userEmail);
 
   const handleLogout = () => {
-    localStorage.removeItem("idToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    navigate("/login");
+    clearAuthData();
+    navigate('/login');
   };
 
   const notifications: Array<{

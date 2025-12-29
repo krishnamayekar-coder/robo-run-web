@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Mail, MessageSquare, Bell, Users, Lock } from "lucide-react";
+import { Moon, Sun, Mail, MessageSquare, Bell, Users, Lock, Plug } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useTheme } from "next-themes";
+import { IntegrationSources } from "@/components/widgets/IntegrationSources";
 
 interface SettingsProps {
   open: boolean;
@@ -37,6 +38,15 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { toast } = useToast();
+
+  // Clear password fields when settings sheet opens
+  useEffect(() => {
+    if (open) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [open]);
 
   const handleUpdatePassword = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -254,10 +264,16 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
                 </Label>
                 <Input
                   id="current-password"
+                  name="current-password"
                   type="password"
+                  autoComplete="off"
                   placeholder="Enter your current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
+                  readOnly
+                  onFocus={(e) => {
+                    e.target.removeAttribute('readonly');
+                  }}
                 />
               </div>
 
@@ -267,10 +283,16 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
                 </Label>
                 <Input
                   id="new-password"
+                  name="new-password"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Enter your new password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  readOnly
+                  onFocus={(e) => {
+                    e.target.removeAttribute('readonly');
+                  }}
                 />
               </div>
 
@@ -280,10 +302,16 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
                 </Label>
                 <Input
                   id="confirm-password"
+                  name="confirm-password"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Confirm your new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  readOnly
+                  onFocus={(e) => {
+                    e.target.removeAttribute('readonly');
+                  }}
                 />
               </div>
 
@@ -293,6 +321,24 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
               >
                 Update Password
               </Button>
+            </div>
+          </div>
+
+          <div className="space-y-4 mt-8">
+            <div className="flex items-center gap-3 pb-2 border-b border-border/30">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Plug className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Integrations</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Manage your connected services and data sources
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg glass-card">
+              <IntegrationSources />
             </div>
           </div>
         </div>

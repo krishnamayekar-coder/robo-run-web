@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { idToken } from '../tokenmanager';
+import { getAuthToken } from '@/lib/auth';
 import type {
   RecentActivityResponse,
   GitRecentResponse,
@@ -9,24 +9,15 @@ import type {
   WorkloadDistributionResponse,
   LoginRequest,
   LoginResponse,
+  IntegrationSourcesResponse,
+  IntegrationSource,
+  ConnectIntegrationRequest,
+  SyncIntegrationResponse,
+  TeamMembersResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
 const API_KEY = import.meta.env.VITE_API_KEY || 'my-secret-api-key';
-
-const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('idToken');
-    if (stored) return stored;
-    
-    const envToken = import.meta.env.VITE_AUTH_TOKEN;
-    if (envToken) return envToken;
-    
-    const oldStored = localStorage.getItem('authToken');
-    if (oldStored) return oldStored;
-  }
-  return idToken;
-};
 
 export const api = createApi({
   reducerPath: 'api',
@@ -42,7 +33,10 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution'],
+  // Auto-refetch queries on window focus to keep data fresh
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
+  tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution', 'SprintLoadOverview', 'IntegrationSources', 'TeamMembers'],
   endpoints: (builder) => ({
     getRecentActivity: builder.query<RecentActivityResponse, { from_date: string; to_date: string }>({
       query: ({ from_date, to_date }) => ({
@@ -74,7 +68,44 @@ export const api = createApi({
     
     getWorkloadDistribution: builder.query<WorkloadDistributionResponse, void>({
       query: () => '/developers/workload',
-      providesTags: ['WorkloadDistribution'],
+      providesTags: ['WorkloadDistribution', 'SprintLoadOverview'],
+    }),
+    
+    getTeamMembers: builder.query<TeamMembersResponse, { project_id: string }>({
+      query: ({ project_id }) => ({
+        url: `/projects/${project_id}/team-members`,
+      }),
+      providesTags: ['TeamMembers'],
+    }),
+    
+    getIntegrationSources: builder.query<IntegrationSourcesResponse, void>({
+      query: () => '/integrations',
+      providesTags: ['IntegrationSources'],
+    }),
+    
+    connectIntegration: builder.mutation<IntegrationSource, ConnectIntegrationRequest>({
+      query: (body) => ({
+        url: '/integrations/connect',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['IntegrationSources'],
+    }),
+    
+    disconnectIntegration: builder.mutation<void, { id: string }>({
+      query: ({ id }) => ({
+        url: `/integrations/${id}/disconnect`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['IntegrationSources'],
+    }),
+    
+    syncIntegration: builder.mutation<SyncIntegrationResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/integrations/${id}/sync`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['IntegrationSources'],
     }),
     
     login: builder.mutation<LoginResponse, LoginRequest>({
@@ -112,6 +143,11 @@ export const {
   useGetTeamInsightsQuery,
   useGetPRBottlenecksQuery,
   useGetWorkloadDistributionQuery,
+  useGetTeamMembersQuery,
+  useGetIntegrationSourcesQuery,
+  useConnectIntegrationMutation,
+  useDisconnectIntegrationMutation,
+  useSyncIntegrationMutation,
   useLoginMutation,
 } = api;
 
@@ -130,5 +166,16 @@ export type {
   PRBottlenecksResponse,
   WorkloadItem,
   WorkloadDistributionResponse,
+  SprintLoadOverviewItem,
+  FocusToday,
+  SprintLoadSummary,
+  TeamMember,
+  TeamMembersResponse,
+  IntegrationType,
+  IntegrationStatus,
+  IntegrationSource,
+  IntegrationSourcesResponse,
+  ConnectIntegrationRequest,
+  SyncIntegrationResponse,
 } from './types';
 

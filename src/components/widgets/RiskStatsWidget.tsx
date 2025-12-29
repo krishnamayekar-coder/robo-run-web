@@ -52,9 +52,24 @@ export function RiskStatsWidget({ isPersonal = false }: RiskStatsWidgetProps) {
 
   const isLoading = bottlenecksLoading || insightsLoading;
 
-  const openBottlenecks = bottlenecksData?.bottlenecks?.filter(pr => pr.state === "open") || [];
+  // Show all bottlenecks (both open and closed) since the API returns bottlenecks that were stuck
+  const allBottlenecks = bottlenecksData?.bottlenecks || [];
+  
+  // Separate open and closed bottlenecks for different metrics
+  const openBottlenecks = allBottlenecks.filter(pr => {
+    const state = pr.state?.toLowerCase();
+    return state === "open" || state === "draft";
+  });
+  
+  // For "PRs Stuck" - only count open ones (currently active bottlenecks)
+  // For critical/high risk - count all bottlenecks regardless of state (historical + current)
+  const allCriticalBottlenecks = allBottlenecks.filter(pr => pr.idle_days >= 7);
+  const allHighBottlenecks = allBottlenecks.filter(pr => pr.idle_days >= 3 && pr.idle_days < 7);
+  
+  // Open critical/high risk PRs (currently stuck)
   const criticalBottlenecks = openBottlenecks.filter(pr => pr.idle_days >= 7).length;
   const highBottlenecks = openBottlenecks.filter(pr => pr.idle_days >= 3 && pr.idle_days < 7).length;
+  
   const totalStuckPRs = openBottlenecks.length;
   const highPriorityInactive = teamInsights?.team_metrics_summary?.high_priority_inactive?.count || 0;
 
@@ -77,10 +92,10 @@ export function RiskStatsWidget({ isPersonal = false }: RiskStatsWidgetProps) {
     {
       icon: <Clock className="h-4 w-4" />,
       label: "Critical PRs (>7 days)",
-      value: criticalBottlenecks,
-      severity: criticalBottlenecks > 0 ? "critical" : "low",
-      trend: criticalBottlenecks > 0 ? "up" : "down",
-      trendValue: criticalBottlenecks > 0 ? 15 : 0,
+      value: allCriticalBottlenecks.length,
+      severity: allCriticalBottlenecks.length > 0 ? "critical" : "low",
+      trend: allCriticalBottlenecks.length > 0 ? "up" : "down",
+      trendValue: allCriticalBottlenecks.length > 0 ? 15 : 0,
     },
     {
       icon: <AlertCircle className="h-4 w-4" />,
@@ -93,10 +108,10 @@ export function RiskStatsWidget({ isPersonal = false }: RiskStatsWidgetProps) {
     {
       icon: <Flame className="h-4 w-4" />,
       label: "High Risk PRs (3-7 days)",
-      value: highBottlenecks,
-      severity: highBottlenecks > 0 ? "high" : "low",
-      trend: highBottlenecks > 0 ? "up" : "down",
-      trendValue: highBottlenecks > 0 ? 12 : 0,
+      value: allHighBottlenecks.length,
+      severity: allHighBottlenecks.length > 0 ? "high" : "low",
+      trend: allHighBottlenecks.length > 0 ? "up" : "down",
+      trendValue: allHighBottlenecks.length > 0 ? 12 : 0,
     },
   ];
 

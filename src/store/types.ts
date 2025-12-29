@@ -143,7 +143,45 @@ export interface WorkloadItem {
   max_idle_days: number;
 }
 
-export type WorkloadDistributionResponse = WorkloadItem[];
+export interface FocusToday {
+  active_jira_tickets: number;
+  high_priority_tickets: number;
+  prs_awaiting_review: number;
+  subtasks: number;
+}
+
+export interface SprintLoadOverviewItem {
+  name: string;
+  role: string;
+  assigned_story_points: number;
+  avg_story_points_last_3_sprints: number;
+  load_label: string;
+  tooltip: string;
+  focus_today: FocusToday;
+}
+
+export interface SprintLoadSummary {
+  overloaded_count: number | null;
+}
+
+export interface WorkloadPullRequest {
+  pr_id: string;
+  repo: string;
+  pr_number: number;
+  title: string;
+  status: string;
+  author: string;
+  jira_ticket: string | null;
+  created: string;
+  ci_status: string | null;
+  duration: string;
+  description: string | null;
+}
+
+export interface WorkloadDistributionResponse {
+  workload: WorkloadItem[];
+  pull_requests: WorkloadPullRequest[];
+}
 
 export interface LoginRequest {
   email: string;
@@ -162,5 +200,70 @@ export interface LoginResponse {
   message: string;
   role: string;
   auth_result: AuthResult;
+}
+
+// Integration Sources Types
+export type IntegrationType = "jira" | "github" | "confluence" | "slack" | "gitlab";
+
+export type IntegrationStatus = "connected" | "disconnected" | "error" | "syncing";
+
+export interface IntegrationSource {
+  id: string;
+  type: IntegrationType;
+  name: string;
+  status: IntegrationStatus;
+  connected_at: string | null;
+  last_sync: string | null;
+  project_id: string | null; // null if global integration
+  config: {
+    base_url?: string;
+    workspace?: string;
+    repository?: string;
+    organization?: string;
+  };
+  error_message?: string;
+}
+
+export interface IntegrationSourcesResponse {
+  integrations: IntegrationSource[];
+  total_connected: number;
+  total_disconnected: number;
+}
+
+export interface ConnectIntegrationRequest {
+  type: IntegrationType;
+  project_id?: string;
+  config: Record<string, any>;
+}
+
+export interface SyncIntegrationResponse {
+  success: boolean;
+  message: string;
+  last_sync: string;
+}
+
+// Team Members Types
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar_url?: string;
+  project_id: string;
+  project_name: string;
+  open_issues: number;
+  high_priority_issues: number;
+  commits_count: number;
+  prs_count: number;
+  prs_open: number;
+  last_active: string;
+  workload_status: "balanced" | "high" | "overloaded";
+}
+
+export interface TeamMembersResponse {
+  project_id: string;
+  project_name: string;
+  members: TeamMember[];
+  total_members: number;
 }
 
