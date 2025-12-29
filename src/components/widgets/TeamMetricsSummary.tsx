@@ -31,7 +31,11 @@ function MetricCard({ icon, label, value, change, changeLabel, colorClass }: Met
   );
 }
 
-function parseDeltaPercent(deltaStr: string): number {
+function parseDeltaPercent(deltaStr: string | null | undefined): number {
+  // Handle null or undefined values
+  if (!deltaStr || typeof deltaStr !== 'string') {
+    return 0;
+  }
   // Parse strings like "+100.00%" or "-15.00%" to numbers
   const match = deltaStr.match(/[+-]?(\d+\.?\d*)/);
   return match ? parseFloat(match[0]) : 0;
@@ -51,7 +55,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
   
   const commitsCount = gitData?.recent_commits?.length || 0;
   const prsCount = gitData?.recent_pull_requests?.length || 0;
-  const combinedCommitsPRsDelta = teamInsights?.team_metrics_summary?.commits_prs 
+  const combinedCommitsPRsDelta = teamInsights?.team_metrics_summary?.commits_prs?.delta_percent
     ? parseDeltaPercent(teamInsights.team_metrics_summary.commits_prs.delta_percent)
     : 0;
   const combinedCommitsPRsComparison = teamInsights?.team_metrics_summary?.commits_prs?.comparison || "vs last week";
@@ -62,7 +66,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
       label: `${prefix}Jira Tickets`,
       value: teamInsights.team_metrics_summary.total_jira_tickets.count,
       change: parseDeltaPercent(teamInsights.team_metrics_summary.total_jira_tickets.delta_percent),
-      changeLabel: teamInsights.team_metrics_summary.total_jira_tickets.comparison,
+      changeLabel: teamInsights.team_metrics_summary.total_jira_tickets.comparison || "vs last week",
       colorClass: "bg-primary/10",
     },
     {
@@ -86,7 +90,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
       label: "High Priority Inactive",
       value: teamInsights.team_metrics_summary.high_priority_inactive.count,
       change: parseDeltaPercent(teamInsights.team_metrics_summary.high_priority_inactive.delta_percent),
-      changeLabel: teamInsights.team_metrics_summary.high_priority_inactive.comparison,
+      changeLabel: teamInsights.team_metrics_summary.high_priority_inactive.comparison || "vs last week",
       colorClass: "bg-warning/10",
     },
     {

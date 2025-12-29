@@ -125,11 +125,11 @@ function Login() {
 
               {!isForgot ? (
                 <>
-                  <p className="text-gray-600 mb-6">
+                  <div className="text-gray-600 mb-6">
                     <h3 className="text-foreground text-lg font-semibold mb-2">
                       Welcome to Activity Tracker - Sign in to access your activity dashboard
                     </h3>
-                  </p>
+                  </div>
 
                   <form 
                     className="space-y-4"
