@@ -39,11 +39,13 @@ export const api = createApi({
   endpoints: (builder) => ({
     getRecentActivity: builder.query<RecentActivityResponse, { from_date: string; to_date: string }>({
       query: ({ from_date, to_date }) => ({
-        url: '/activity/recent',
+        url: '/jira/activity/recent',
         params: { from_date, to_date },
       }),
       providesTags: ['RecentActivity'],
     }),
+
+    
     
     getGitRecent: builder.query<GitRecentResponse, void>({
       query: () => '/git/recent',

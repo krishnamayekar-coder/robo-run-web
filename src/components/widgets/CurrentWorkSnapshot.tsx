@@ -1,8 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, GitBranch, GitCommit } from "lucide-react";
-import { useGetGitRecentQuery } from "@/store/api";
+import { Clock, GitBranch, GitCommit, TicketCheck } from "lucide-react";
+import { useGetGitRecentQuery, useGetRecentActivityQuery } from "@/store/api";
 import { formatDistanceToNow } from "date-fns";
 
 interface WorkItem {
@@ -45,8 +45,41 @@ function formatTimeAgo(timestamp: string): string {
   }
 }
 
+function mapPriority(priority: string | null | undefined): "critical" | "high" | "medium" | "low" {
+  if (!priority) return "low";
+  const lower = priority.toLowerCase();
+  if (lower.includes("critical") || lower.includes("highest")) return "critical";
+  if (lower.includes("high")) return "high";
+  if (lower.includes("medium")) return "medium";
+  return "low";
+}
+
 export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotProps) {
+  const toDate = new Date();
+  const fromDate = new Date();
+  fromDate.setDate(fromDate.getDate() - 7);
+  
+  const fromDateStr = fromDate.toISOString().split('T')[0];
+  const toDateStr = toDate.toISOString().split('T')[0];
+
+  const { data: jiraData, isLoading: jiraLoading } = useGetRecentActivityQuery({
+    from_date: fromDateStr,
+    to_date: toDateStr,
+  });
+  
   const { data: gitData, isLoading: gitLoading } = useGetGitRecentQuery();
+
+  const jiraItems: WorkItem[] = ((jiraData as any)?.jira_recent_activities?.slice(0, 5) || []).map((item: any) => ({
+    id: item.jira_ticket_id || "N/A",
+    title: item.jira_title || "Issue",
+    priority: mapPriority(item.priority),
+    assignee: {
+      name: item.assignee || "Unassigned",
+      initials: getInitials(item.assignee),
+    },
+    status: item.jira_status || "Unknown",
+    lastUpdate: item.time_ago || formatTimeAgo(item.last_activity_time),
+  }));
 
   const prItems: WorkItem[] = gitData?.recent_pull_requests?.slice(0, 5).map((pr) => ({
     id: `#${pr.pr_number}`,
@@ -81,7 +114,7 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
     };
   }) || [];
 
-  const isLoading = gitLoading;
+  const isLoading = jiraLoading || gitLoading;
 
   const priorityClasses = {
     critical: "priority-critical",
@@ -127,9 +160,18 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
       {isLoading ? (
         <div className="text-sm text-muted-foreground p-3">Loading work items...</div>
       ) : (
-        <Tabs defaultValue="commits" className="w-full">
+        <Tabs defaultValue="jira" className="w-full">
           <div className="glass-card rounded-xl p-1.5 w-full mb-4">
-            <TabsList className="w-full grid grid-cols-2 h-auto bg-transparent border-0 shadow-none p-0 gap-1">
+            <TabsList className="w-full grid grid-cols-3 h-auto bg-transparent border-0 shadow-none p-0 gap-1">
+              <TabsTrigger 
+                value="jira" 
+                className="flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm h-9 data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <TicketCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Jira Tickets</span>
+                <span className="sm:hidden">Jira</span>
+                <Badge variant="secondary" className="text-[10px] ml-1">{jiraItems.length}</Badge>
+              </TabsTrigger>
               <TabsTrigger 
                 value="commits" 
                 className="flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm h-9 data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground hover:text-foreground transition-colors"
@@ -150,6 +192,18 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="jira" className="mt-0">
+            {jiraItems.length === 0 ? (
+              <div className="text-sm text-muted-foreground p-3 text-center">No Jira items</div>
+            ) : (
+              <div className="space-y-1">
+                {jiraItems.map((item, index) => (
+                  <WorkItemRow key={item.id || `jira-${index}`} item={item} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="commits" className="mt-0">
             {commitItems.length === 0 ? (
