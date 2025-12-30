@@ -265,3 +265,14 @@ export interface TeamMembersResponse {
   total_members: number;
 }
 
+export interface ReportResponse {
+  status: number;
+  message: string;
+  data: {
+    jira_issues: any[][];
+    github_pull_requests: any[][];
+    jira_sprint_progress: any[][];
+    jira_subtasks: any[];
+  };
+}
+

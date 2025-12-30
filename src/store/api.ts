@@ -14,6 +14,7 @@ import type {
   ConnectIntegrationRequest,
   SyncIntegrationResponse,
   TeamMembersResponse,
+  ReportResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
@@ -77,6 +78,13 @@ export const api = createApi({
         url: `/projects/${project_id}/team-members`,
       }),
       providesTags: ['TeamMembers'],
+    }),
+    
+    generateReport: builder.query<ReportResponse, { from_date: string; to_date: string; type?: string }>({
+      query: ({ from_date, to_date, type = 'full' }) => ({
+        url: '/reports/generate',
+        params: { from_date, to_date, type },
+      }),
     }),
     
     getIntegrationSources: builder.query<IntegrationSourcesResponse, void>({
@@ -150,6 +158,7 @@ export const {
   useDisconnectIntegrationMutation,
   useSyncIntegrationMutation,
   useLoginMutation,
+  useLazyGenerateReportQuery,
 } = api;
 
 export type {
