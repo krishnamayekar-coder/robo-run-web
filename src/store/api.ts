@@ -14,6 +14,7 @@ import type {
   ConnectIntegrationRequest,
   SyncIntegrationResponse,
   TeamMembersResponse,
+  UsersDetailsResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
@@ -26,7 +27,11 @@ export const api = createApi({
     prepareHeaders: (headers) => {
       const token = getAuthToken();
       if (token) {
-        headers.set('Authorization', token);
+        // Check if token already has "Bearer" prefix, if not add it
+        const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        headers.set('Authorization', authToken);
+      } else {
+        console.warn('No auth token found in localStorage');
       }
       headers.set('X-API-KEY', API_KEY);
       headers.set('accept', 'application/json');
@@ -74,6 +79,13 @@ export const api = createApi({
     getTeamMembers: builder.query<TeamMembersResponse, { project_id: string }>({
       query: ({ project_id }) => ({
         url: `/projects/${project_id}/team-members`,
+      }),
+      providesTags: ['TeamMembers'],
+    }),
+    
+    getUsersDetails: builder.query<UsersDetailsResponse, void>({
+      query: () => ({
+        url: '/users/details',
       }),
       providesTags: ['TeamMembers'],
     }),
@@ -144,6 +156,7 @@ export const {
   useGetPRBottlenecksQuery,
   useGetWorkloadDistributionQuery,
   useGetTeamMembersQuery,
+  useGetUsersDetailsQuery,
   useGetIntegrationSourcesQuery,
   useConnectIntegrationMutation,
   useDisconnectIntegrationMutation,
