@@ -120,43 +120,6 @@ export const api = createApi({
       invalidatesTags: ['IntegrationSources'],
     }),
     
-    getTeamMembers: builder.query<TeamMembersResponse, { project_id: string }>({
-      query: ({ project_id }) => ({
-        url: `/projects/${project_id}/team-members`,
-      }),
-      providesTags: ['TeamMembers'],
-    }),
-    
-    getIntegrationSources: builder.query<IntegrationSourcesResponse, void>({
-      query: () => '/integrations',
-      providesTags: ['IntegrationSources'],
-    }),
-    
-    connectIntegration: builder.mutation<IntegrationSource, ConnectIntegrationRequest>({
-      query: (body) => ({
-        url: '/integrations/connect',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: ['IntegrationSources'],
-    }),
-    
-    disconnectIntegration: builder.mutation<void, { id: string }>({
-      query: ({ id }) => ({
-        url: `/integrations/${id}/disconnect`,
-        method: 'POST',
-      }),
-      invalidatesTags: ['IntegrationSources'],
-    }),
-    
-    syncIntegration: builder.mutation<SyncIntegrationResponse, { id: string }>({
-      query: ({ id }) => ({
-        url: `/integrations/${id}/sync`,
-        method: 'POST',
-      }),
-      invalidatesTags: ['IntegrationSources'],
-    }),
-    
     login: builder.mutation<LoginResponse, LoginRequest>({
       queryFn: async (credentials) => {
         try {
@@ -227,13 +190,7 @@ export type {
   IntegrationSourcesResponse,
   ConnectIntegrationRequest,
   SyncIntegrationResponse,
-  TeamMember,
-  TeamMembersResponse,
-  IntegrationType,
-  IntegrationStatus,
-  IntegrationSource,
-  IntegrationSourcesResponse,
-  ConnectIntegrationRequest,
-  SyncIntegrationResponse,
+  UserDetail,
+  UsersDetailsResponse,
 } from './types';
 
