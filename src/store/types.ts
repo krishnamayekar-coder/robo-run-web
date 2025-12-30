@@ -265,36 +265,89 @@ export interface TeamMembersResponse {
   total_members: number;
 }
 
-export interface ReportResponse {
-  status: number;
-  message: string;
-  data: {
-    jira_issues: any[][];
-    github_pull_requests: any[][];
-    jira_sprint_progress: any[][];
-    jira_subtasks: any[];
-  };
+// Users Details API Response (flexible structure)
+export interface UserDetail {
+  id?: string;
+  user_id?: string;
+  name?: string;
+  full_name?: string;
+  display_name?: string; // API returns this field
+  username?: string;
+  email?: string;
+  email_address?: string;
+  role?: string;
+  job_title?: string;
+  position?: string;
+  avatar_url?: string;
+  avatar?: string;
+  profile_picture?: string;
+  created_at?: string; // API returns this field
+  org_id?: string | null; // API returns this field
+  org_name?: string | null; // API returns this field
+  org_settings?: {
+    theme?: string;
+    timezone?: string;
+    jira_enabled?: boolean;
+    [key: string]: any;
+  } | null; // API returns this field
+  open_issues?: number;
+  active_issues?: number;
+  jira_tickets?: number;
+  high_priority_issues?: number;
+  critical_issues?: number;
+  commits_count?: number;
+  commits?: number;
+  total_commits?: number;
+  prs_count?: number;
+  pull_requests?: number;
+  total_prs?: number;
+  prs_open?: number;
+  open_prs?: number;
+  active_prs?: number;
+  last_active?: string;
+  last_activity?: string;
+  updated_at?: string;
+  workload_status?: "balanced" | "high" | "overloaded";
 }
 
-export interface AISummaryRecommendation {
-  title: string;
-  text: string;
-  impact: "High" | "Medium" | "Low";
+export interface UsersDetailsResponse {
+  users?: UserDetail[];
+  data?: UserDetail[];
+  [key: string]: any; // Allow flexible response structure
 }
 
+// AI Summary Types
 export interface AISummaryResponse {
-  summary: string[];
-  recommendations: AISummaryRecommendation[];
-  confidence: number;
+  summary?: string;
+  recommendations?: Array<{
+    title: string;
+    text: string;
+    impact: string;
+  }>;
+  [key: string]: any;
 }
 
 export interface AIFactsRequest {
-  question: string;
+  query: string;
+  context?: string;
 }
 
 export interface AIFactsResponse {
-  facts: string;
-  sources: string[];
-  confidence: number;
+  facts?: string[];
+  answer?: string;
+  [key: string]: any;
+}
+
+// Report Generation Types
+export interface GenerateReportRequest {
+  start_date: string;
+  end_date: string;
+  is_detailed?: boolean;
+}
+
+export interface GenerateReportResponse {
+  success: boolean;
+  message?: string;
+  [key: string]: any;
 }
 

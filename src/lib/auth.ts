@@ -25,7 +25,7 @@ export function isTokenExpired(token: string): boolean {
 export function isTokenValid(): boolean {
   if (typeof window === 'undefined') return false;
   
-  const token = localStorage.getItem('idToken');
+  const token = getAuthToken();
   if (!token) return false;
   
   return !isTokenExpired(token);

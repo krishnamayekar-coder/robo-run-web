@@ -14,10 +14,12 @@ import type {
   ConnectIntegrationRequest,
   SyncIntegrationResponse,
   TeamMembersResponse,
-  ReportResponse,
+  UsersDetailsResponse,
   AISummaryResponse,
   AIFactsRequest,
   AIFactsResponse,
+  GenerateReportRequest,
+  GenerateReportResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
@@ -30,7 +32,11 @@ export const api = createApi({
     prepareHeaders: (headers) => {
       const token = getAuthToken();
       if (token) {
-        headers.set('Authorization', token);
+        // Check if token already has "Bearer" prefix, if not add it
+        const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        headers.set('Authorization', authToken);
+      } else {
+        console.warn('No auth token found in localStorage');
       }
       headers.set('X-API-KEY', API_KEY);
       headers.set('accept', 'application/json');
@@ -96,11 +102,11 @@ export const api = createApi({
       providesTags: ['TeamMembers'],
     }),
     
-    generateReport: builder.query<ReportResponse, { from_date: string; to_date: string; type?: string }>({
-      query: ({ from_date, to_date, type = 'full' }) => ({
-        url: '/reports/generate',
-        params: { from_date, to_date, type },
+    getUsersDetails: builder.query<UsersDetailsResponse, void>({
+      query: () => ({
+        url: '/users/details',
       }),
+      providesTags: ['TeamMembers'],
     }),
     
     getIntegrationSources: builder.query<IntegrationSourcesResponse, void>({
@@ -131,6 +137,13 @@ export const api = createApi({
         method: 'POST',
       }),
       invalidatesTags: ['IntegrationSources'],
+    }),
+    
+    generateReport: builder.query<GenerateReportResponse, GenerateReportRequest>({
+      query: ({ start_date, end_date, is_detailed }) => ({
+        url: '/reports/generate',
+        params: { start_date, end_date, is_detailed },
+      }),
     }),
     
     login: builder.mutation<LoginResponse, LoginRequest>({
@@ -169,6 +182,7 @@ export const {
   useGetPRBottlenecksQuery,
   useGetWorkloadDistributionQuery,
   useGetTeamMembersQuery,
+  useGetUsersDetailsQuery,
   useGetIntegrationSourcesQuery,
   useConnectIntegrationMutation,
   useDisconnectIntegrationMutation,
@@ -205,5 +219,7 @@ export type {
   IntegrationSourcesResponse,
   ConnectIntegrationRequest,
   SyncIntegrationResponse,
+  UserDetail,
+  UsersDetailsResponse,
 } from './types';
 
