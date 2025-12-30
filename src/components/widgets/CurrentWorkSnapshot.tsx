@@ -1,8 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, GitBranch, TicketCheck, GitCommit } from "lucide-react";
-import { useGetRecentActivityQuery, useGetGitRecentQuery } from "@/store/api";
+import { Clock, GitBranch, GitCommit } from "lucide-react";
+import { useGetGitRecentQuery } from "@/store/api";
 import { formatDistanceToNow } from "date-fns";
 
 interface WorkItem {
@@ -24,7 +24,13 @@ interface CurrentWorkSnapshotProps {
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return "??";
-  return name
+  // Extract name from email format (e.g., "krishna.mayekar@aithinkers.com" -> "KM")
+  const namePart = name.split("@")[0];
+  const parts = namePart.split(".");
+  if (parts.length > 1) {
+    return (parts[0][0] + parts[1][0]).toUpperCase().slice(0, 2);
+  }
+  return namePart
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -40,41 +46,8 @@ function formatTimeAgo(timestamp: string): string {
   }
 }
 
-function mapPriority(priority: string | null | undefined): "critical" | "high" | "medium" | "low" {
-  if (!priority) return "low";
-  const lower = priority.toLowerCase();
-  if (lower.includes("critical") || lower.includes("highest")) return "critical";
-  if (lower.includes("high")) return "high";
-  if (lower.includes("medium")) return "medium";
-  return "low";
-}
-
 export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotProps) {
-  const toDate = new Date();
-  const fromDate = new Date();
-  fromDate.setDate(fromDate.getDate() - 7);
-  
-  const fromDateStr = fromDate.toISOString().split('T')[0];
-  const toDateStr = toDate.toISOString().split('T')[0];
-
-  const { data: jiraData, isLoading: jiraLoading } = useGetRecentActivityQuery({
-    from_date: fromDateStr,
-    to_date: toDateStr,
-  });
-  
   const { data: gitData, isLoading: gitLoading } = useGetGitRecentQuery();
-
-  const jiraItems: WorkItem[] = jiraData?.data?.slice(0, 4).map((item) => ({
-    id: item.issue_id,
-    title: item.raw?.fields?.summary || "Issue",
-    priority: mapPriority(item.priority),
-    assignee: {
-      name: item.assignee || "Unassigned",
-      initials: getInitials(item.assignee),
-    },
-    status: item.status,
-    lastUpdate: formatTimeAgo(item.timestamp),
-  })) || [];
 
   const prItems: WorkItem[] = gitData?.recent_pull_requests?.slice(0, 5).map((pr) => ({
     id: `#${pr.pr_number}`,
@@ -88,14 +61,13 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
     lastUpdate: formatTimeAgo(pr.timestamp),
   })) || [];
 
-  const commitItems: WorkItem[] = gitData?.recent_commits?.slice(0, 5).map((commit: any) => {
-    // Handle different API response structures
-    const commitId = commit.commit_sha || commit.commit_id || "N/A";
-    const commitMessage = commit.message || commit.commit_message || "Commit";
-    const authorEmail = commit.author_email || commit.author || "";
+  const commitItems: WorkItem[] = gitData?.recent_commits?.slice(0, 5).map((commit) => {
+    const commitId = commit.commit_sha || "N/A";
+    const commitMessage = commit.message || "Commit";
+    const authorEmail = commit.author_email || "";
     const authorName = authorEmail.includes("@") 
-      ? authorEmail.split("@")[0] 
-      : authorEmail.split("/").pop() || "Unknown";
+      ? authorEmail.split("@")[0].replace(/\./g, " ") 
+      : authorEmail || "Unknown";
     
     return {
       id: typeof commitId === "string" && commitId.length > 7 ? commitId.substring(0, 7) : commitId,
@@ -103,14 +75,14 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
       priority: "medium" as const,
       assignee: {
         name: authorName,
-        initials: getInitials(authorName),
+        initials: getInitials(authorEmail || authorName),
       },
       status: commit.repo?.split("/").pop() || "repo",
       lastUpdate: formatTimeAgo(commit.timestamp),
     };
   }) || [];
 
-  const isLoading = jiraLoading || gitLoading;
+  const isLoading = gitLoading;
 
   const priorityClasses = {
     critical: "priority-critical",
@@ -156,18 +128,9 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
       {isLoading ? (
         <div className="text-sm text-muted-foreground p-3">Loading work items...</div>
       ) : (
-        <Tabs defaultValue="jira" className="w-full">
+        <Tabs defaultValue="commits" className="w-full">
           <div className="glass-card rounded-xl p-1.5 w-full mb-4">
-            <TabsList className="w-full grid grid-cols-3 h-auto bg-transparent border-0 shadow-none p-0 gap-1">
-              <TabsTrigger 
-                value="jira" 
-                className="flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm h-9 data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <TicketCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">Jira Tickets</span>
-                <span className="sm:hidden">Jira</span>
-                <Badge variant="secondary" className="text-[10px] ml-1">{jiraItems.length}</Badge>
-              </TabsTrigger>
+            <TabsList className="w-full grid grid-cols-2 h-auto bg-transparent border-0 shadow-none p-0 gap-1">
               <TabsTrigger 
                 value="commits" 
                 className="flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm h-9 data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground hover:text-foreground transition-colors"
@@ -188,18 +151,6 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
               </TabsTrigger>
             </TabsList>
           </div>
-
-          <TabsContent value="jira" className="mt-0">
-            {jiraItems.length === 0 ? (
-              <div className="text-sm text-muted-foreground p-3 text-center">No Jira items</div>
-            ) : (
-              <div className="space-y-1">
-                {jiraItems.map((item, index) => (
-                  <WorkItemRow key={item.id || `jira-${index}`} item={item} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
 
           <TabsContent value="commits" className="mt-0">
             {commitItems.length === 0 ? (

@@ -58,7 +58,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
   const combinedCommitsPRsDelta = teamInsights?.team_metrics_summary?.commits_prs?.delta_percent
     ? parseDeltaPercent(teamInsights.team_metrics_summary.commits_prs.delta_percent)
     : 0;
-  const combinedCommitsPRsComparison = teamInsights?.team_metrics_summary?.commits_prs?.comparison || "vs last week";
+  const combinedCommitsPRsComparison = teamInsights?.team_metrics_summary?.commits_prs?.comparison || "vs last sprint";
   
   const metrics = teamInsights?.team_metrics_summary ? [
     {
@@ -66,7 +66,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
       label: `${prefix}Jira Tickets`,
       value: teamInsights.team_metrics_summary.total_jira_tickets.count,
       change: parseDeltaPercent(teamInsights.team_metrics_summary.total_jira_tickets.delta_percent),
-      changeLabel: teamInsights.team_metrics_summary.total_jira_tickets.comparison || "vs last week",
+      changeLabel: teamInsights.team_metrics_summary.total_jira_tickets.comparison || "vs last sprint",
       colorClass: "bg-primary/10",
     },
     {
@@ -90,7 +90,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
       label: "High Priority Inactive",
       value: teamInsights.team_metrics_summary.high_priority_inactive.count,
       change: parseDeltaPercent(teamInsights.team_metrics_summary.high_priority_inactive.delta_percent),
-      changeLabel: teamInsights.team_metrics_summary.high_priority_inactive.comparison || "vs last week",
+      changeLabel: teamInsights.team_metrics_summary.high_priority_inactive.comparison || "vs last sprint",
       colorClass: "bg-warning/10",
     },
     {
@@ -98,7 +98,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
       label: `${prefix}Incidents`,
       value: 0, // Not available in API
       change: 0,
-      changeLabel: "vs last week",
+      changeLabel: "vs last sprint",
       colorClass: "bg-destructive/10",
     },
   ] : [];
