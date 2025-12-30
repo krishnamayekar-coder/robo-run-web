@@ -2,14 +2,35 @@ import { Sparkles, TrendingUp, AlertTriangle, Lightbulb, ChevronRight, Zap } fro
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useGetAISummaryQuery } from "@/store/api";
 
 interface AISummaryInsightsProps {
   isPersonal?: boolean;
 }
 
 export function AISummaryInsights({ isPersonal = false }: AISummaryInsightsProps) {
-  const insights: Array<{ type: string; icon: any; text: string }> = [];
-  const recommendations: Array<{ title: string; impact: string; description: string }> = [];
+  const { data: aiSummaryData, isLoading } = useGetAISummaryQuery();
+  
+  const insights = (aiSummaryData?.summary || []).map((text, index) => {
+    const cleanText = text.trim().replace(/^\.\s*/, '');
+    let type = "info";
+    let icon = TrendingUp;
+    
+    if (cleanText.toLowerCase().includes("risk") || cleanText.toLowerCase().includes("stale") || cleanText.toLowerCase().includes("blocker") || cleanText.toLowerCase().includes("backlog")) {
+      type = "warning";
+      icon = AlertTriangle;
+    } else if (cleanText.toLowerCase().includes("success") || cleanText.toLowerCase().includes("improved") || cleanText.toLowerCase().includes("good")) {
+      type = "positive";
+      icon = TrendingUp;
+    } else {
+      type = "info";
+      icon = Lightbulb;
+    }
+    
+    return { type, icon, text: cleanText };
+  });
+  
+  const recommendations = aiSummaryData?.recommendations || [];
 
   const impactColors = {
     high: "bg-destructive/10 text-destructive border-destructive/20",
@@ -27,7 +48,7 @@ export function AISummaryInsights({ isPersonal = false }: AISummaryInsightsProps
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-[10px] gap-1.5 bg-primary/5">
             <Zap className="h-3 w-3 text-primary" />
-            Confidence: 94%
+            Confidence: {aiSummaryData?.confidence || 0}%
           </Badge>
         </div>
       </div>
@@ -37,7 +58,11 @@ export function AISummaryInsights({ isPersonal = false }: AISummaryInsightsProps
         <div className="space-y-3">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Key Insights</span>
           <div className="space-y-2">
-            {insights.length === 0 ? (
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground p-3 text-center">
+                Loading AI insights...
+              </div>
+            ) : insights.length === 0 ? (
               <div className="text-sm text-muted-foreground p-3 text-center">
                 AI insights not available
               </div>
@@ -72,7 +97,11 @@ export function AISummaryInsights({ isPersonal = false }: AISummaryInsightsProps
         <div className="space-y-3">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">AI Recommendations</span>
           <div className="space-y-2">
-            {recommendations.length === 0 ? (
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground p-3 text-center">
+                Loading recommendations...
+              </div>
+            ) : recommendations.length === 0 ? (
               <div className="text-sm text-muted-foreground p-3 text-center">
                 No recommendations available
               </div>
@@ -89,36 +118,12 @@ export function AISummaryInsights({ isPersonal = false }: AISummaryInsightsProps
                       {rec.impact} impact
                     </Badge>
                   </div>
-                  <span className="text-xs text-muted-foreground">{rec.description}</span>
+                  <span className="text-xs text-muted-foreground">{rec.text}</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
             )))}
           </div>
         </div>
-
-        {/* Predictive Analysis */}
-        <div className="p-4 rounded-lg glass-card border border-primary/20">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Sprint Prediction</span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Completion Probability</span>
-              <span className="font-medium text-success">87%</span>
-            </div>
-            <Progress value={87} className="h-2" />
-            <p className="text-xs text-muted-foreground">
-              Based on current velocity and remaining work, the sprint is likely to complete on time with 87% confidence.
-            </p>
-          </div>
-        </div>
-
-        <Button variant="outline" className="w-full text-sm gap-2">
-          <Sparkles className="h-4 w-4" />
-          Generate Detailed Report
-        </Button>
       </div>
     </div>
   );

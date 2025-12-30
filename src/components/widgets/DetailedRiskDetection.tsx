@@ -62,10 +62,9 @@ export function DetailedRiskDetection({ isPersonal = false }: DetailedRiskDetect
       impactScore: calculateImpactScore(pr.idle_days, pr.total_changes),
       mitigation: getMitigation(pr.idle_days, pr.state),
       url: pr.url,
-      state: pr.state, // Include state for conditional rendering
+      state: pr.state,
     }))
     .sort((a, b) => {
-      // Sort open PRs first, then by impact score
       if (a.state === "open" && b.state !== "open") return -1;
       if (a.state !== "open" && b.state === "open") return 1;
       return b.impactScore - a.impactScore;
@@ -88,7 +87,6 @@ export function DetailedRiskDetection({ isPersonal = false }: DetailedRiskDetect
         </h2>
         <div className="flex gap-2">
           {["critical", "high", "medium"].map((sev) => {
-            // Only count open PRs in badges
             const count = allRisks.filter((r) => r.severity === sev && r.state === "open").length;
             if (count === 0) return null;
             const config = severityConfig[sev as keyof typeof severityConfig];

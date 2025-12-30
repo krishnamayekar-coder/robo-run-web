@@ -38,18 +38,19 @@ export const api = createApi({
       return headers;
     },
   }),
-  // Auto-refetch queries on window focus to keep data fresh
   refetchOnFocus: true,
   refetchOnReconnect: true,
   tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution', 'SprintLoadOverview', 'IntegrationSources', 'TeamMembers'],
   endpoints: (builder) => ({
     getRecentActivity: builder.query<RecentActivityResponse, { from_date: string; to_date: string }>({
       query: ({ from_date, to_date }) => ({
-        url: '/activity/recent',
+        url: '/jira/activity/recent',
         params: { from_date, to_date },
       }),
       providesTags: ['RecentActivity'],
     }),
+
+    
     
     getGitRecent: builder.query<GitRecentResponse, void>({
       query: () => '/git/recent',
@@ -64,6 +65,19 @@ export const api = createApi({
     getTeamInsights: builder.query<TeamInsightsResponse, void>({
       query: () => '/jira/team/insights',
       providesTags: ['TeamInsights'],
+    }),
+    
+    getAISummary: builder.query<AISummaryResponse, void>({
+      query: () => '/ai/summary',
+      providesTags: ['TeamInsights'],
+    }),
+    
+    getAIFacts: builder.mutation<AIFactsResponse, AIFactsRequest>({
+      query: (body) => ({
+        url: '/facts',
+        method: 'POST',
+        body,
+      }),
     }),
     
     getPRBottlenecks: builder.query<PRBottlenecksResponse, void>({
@@ -162,6 +176,9 @@ export const {
   useDisconnectIntegrationMutation,
   useSyncIntegrationMutation,
   useLoginMutation,
+  useLazyGenerateReportQuery,
+  useGetAISummaryQuery,
+  useGetAIFactsMutation,
 } = api;
 
 export type {

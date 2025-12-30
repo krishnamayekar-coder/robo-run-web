@@ -1,8 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, GitBranch, TicketCheck, GitCommit } from "lucide-react";
-import { useGetRecentActivityQuery, useGetGitRecentQuery } from "@/store/api";
+import { Clock, GitBranch, GitCommit, TicketCheck } from "lucide-react";
+import { useGetGitRecentQuery, useGetRecentActivityQuery } from "@/store/api";
 import { formatDistanceToNow } from "date-fns";
 
 interface WorkItem {
@@ -24,7 +24,12 @@ interface CurrentWorkSnapshotProps {
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return "??";
-  return name
+  const namePart = name.split("@")[0];
+  const parts = namePart.split(".");
+  if (parts.length > 1) {
+    return (parts[0][0] + parts[1][0]).toUpperCase().slice(0, 2);
+  }
+  return namePart
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -64,17 +69,17 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
   
   const { data: gitData, isLoading: gitLoading } = useGetGitRecentQuery();
 
-  const jiraItems: WorkItem[] = jiraData?.data?.slice(0, 4).map((item) => ({
-    id: item.issue_id,
-    title: item.raw?.fields?.summary || "Issue",
+  const jiraItems: WorkItem[] = ((jiraData as any)?.jira_recent_activities?.slice(0, 5) || []).map((item: any) => ({
+    id: item.jira_ticket_id || "N/A",
+    title: item.jira_title || "Issue",
     priority: mapPriority(item.priority),
     assignee: {
       name: item.assignee || "Unassigned",
       initials: getInitials(item.assignee),
     },
-    status: item.status,
-    lastUpdate: formatTimeAgo(item.timestamp),
-  })) || [];
+    status: item.jira_status || "Unknown",
+    lastUpdate: item.time_ago || formatTimeAgo(item.last_activity_time),
+  }));
 
   const prItems: WorkItem[] = gitData?.recent_pull_requests?.slice(0, 5).map((pr) => ({
     id: `#${pr.pr_number}`,
@@ -88,14 +93,13 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
     lastUpdate: formatTimeAgo(pr.timestamp),
   })) || [];
 
-  const commitItems: WorkItem[] = gitData?.recent_commits?.slice(0, 5).map((commit: any) => {
-    // Handle different API response structures
-    const commitId = commit.commit_sha || commit.commit_id || "N/A";
-    const commitMessage = commit.message || commit.commit_message || "Commit";
-    const authorEmail = commit.author_email || commit.author || "";
+  const commitItems: WorkItem[] = gitData?.recent_commits?.slice(0, 5).map((commit) => {
+    const commitId = commit.commit_sha || "N/A";
+    const commitMessage = commit.message || "Commit";
+    const authorEmail = commit.author_email || "";
     const authorName = authorEmail.includes("@") 
-      ? authorEmail.split("@")[0] 
-      : authorEmail.split("/").pop() || "Unknown";
+      ? authorEmail.split("@")[0].replace(/\./g, " ") 
+      : authorEmail || "Unknown";
     
     return {
       id: typeof commitId === "string" && commitId.length > 7 ? commitId.substring(0, 7) : commitId,
@@ -103,7 +107,7 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
       priority: "medium" as const,
       assignee: {
         name: authorName,
-        initials: getInitials(authorName),
+        initials: getInitials(authorEmail || authorName),
       },
       status: commit.repo?.split("/").pop() || "repo",
       lastUpdate: formatTimeAgo(commit.timestamp),

@@ -30,13 +30,13 @@ export function WorkloadDistribution() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { data: workloadData, isLoading } = useGetWorkloadDistributionQuery();
   
-  // Handle new response structure with workload and pull_requests
-  const workload = workloadData?.workload || [];
-  const pullRequests = workloadData?.pull_requests || [];
+  const workload = Array.isArray(workloadData) 
+    ? workloadData 
+    : (workloadData?.workload || []);
+  const pullRequests = Array.isArray(workloadData) 
+    ? [] 
+    : (workloadData?.pull_requests || []);
   
-  // Calculate PRs awaiting review per user
-  // Match PR authors to workload users by name (flexible matching)
-  // Only count PRs that are open (not closed/merged)
   const prsByAuthor = pullRequests.reduce((acc, pr) => {
     const status = pr.status?.toUpperCase();
     if (status === "OPEN" || status === "DRAFT") {
@@ -46,21 +46,17 @@ export function WorkloadDistribution() {
     return acc;
   }, {} as Record<string, number>);
   
-  // Create a mapping from user names to PR counts
   const getPRCountForUser = (userName: string): number => {
     const normalizedUserName = userName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    // Try exact match first
     if (prsByAuthor[normalizedUserName]) {
       return prsByAuthor[normalizedUserName];
     }
-    // Try matching by first name or last name
     const nameParts = normalizedUserName.split(/\s+/);
     for (const part of nameParts) {
       if (part.length > 3 && prsByAuthor[part]) {
         return prsByAuthor[part];
       }
     }
-    // Try matching PR authors that contain user name parts
     for (const [author, count] of Object.entries(prsByAuthor)) {
       if (nameParts.some(part => part.length > 3 && author.includes(part))) {
         return count;
@@ -69,14 +65,11 @@ export function WorkloadDistribution() {
     return 0;
   };
   
-  // Calculate average open issues for load calculation
   const avgOpenIssues = workload.length > 0 
-    ? workload.reduce((sum, item) => sum + item.open_issues, 0) / workload.length 
+    ? (workload as any[]).reduce((sum: number, item: any) => sum + (item.open_issues || 0), 0) / workload.length 
     : 0;
   
-  // Map workload to team members
   const teamMembers: TeamMember[] = workload.map((item) => {
-    // Calculate load label based on open issues vs average
     const loadRatio = avgOpenIssues > 0 ? item.open_issues / avgOpenIssues : 1;
     let loadLabel = "🟢 Balanced";
     let tooltip = "Load is based on assigned story points compared to historical sprint averages.";
@@ -91,15 +84,14 @@ export function WorkloadDistribution() {
       tooltip = "Assigned work is within normal sprint capacity";
     }
     
-    // Get PRs awaiting review for this user
     const prsAwaitingReview = getPRCountForUser(item.name);
     
     return {
       id: item.user_id,
       name: item.name,
-      role: "Developer", // Default role since not in API response
-      assignedStoryPoints: 0, // Not available in new structure
-      avgStoryPointsLast3Sprints: 0, // Not available in new structure
+      role: "Developer",
+      assignedStoryPoints: 0,
+      avgStoryPointsLast3Sprints: 0,
       loadLabel: loadLabel,
       tooltip: tooltip,
       activeJiraTickets: item.open_issues,
@@ -114,8 +106,6 @@ export function WorkloadDistribution() {
   };
 
   const getLoadLabelTooltip = (loadLabel: string): string => {
-    // Remove emojis and special characters, normalize for matching
-    // Handle both Unicode escape sequences and actual emojis
     const cleanLabel = loadLabel
       .replace(/\\u[\dA-F]{4}/gi, '') // Remove Unicode escape sequences like \ud83d\udfe2
       .replace(/[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}]/gu, '') // Remove emojis
@@ -130,14 +120,9 @@ export function WorkloadDistribution() {
     } else if (cleanLabel.includes('overloaded')) {
       return "Assigned work significantly exceeds historical sprint capacity";
     }
-    // Fallback to a default message
     return "Load is based on assigned story points compared to historical sprint averages.";
   };
 
-  // Calculate overloaded count - only show if:
-  // 1. Per-person load states are shown (they are)
-  // 2. "Overloaded" is clearly defined (check if any member has "Overloaded" in load_label)
-  // 3. The count is actionable (we calculate it from the data)
   const overloadedMembers = teamMembers.filter(m => 
     m.loadLabel && m.loadLabel.toLowerCase().includes('overloaded')
   );

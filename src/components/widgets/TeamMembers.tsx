@@ -9,6 +9,78 @@ interface TeamMembersProps {
   isPersonal?: boolean;
 }
 
+const dummyData: TeamMembersResponse = {
+  project_id: "project-1",
+  project_name: "AI Work Tracker",
+  members: [
+    {
+      id: "user-1",
+      name: "John Doe",
+      email: "john.doe@company.com",
+      role: "Senior Developer",
+      avatar_url: undefined,
+      project_id: "project-1",
+      project_name: "AI Work Tracker",
+      open_issues: 5,
+      high_priority_issues: 2,
+      commits_count: 24,
+      prs_count: 8,
+      prs_open: 3,
+      last_active: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      workload_status: "balanced",
+    },
+    {
+      id: "user-2",
+      name: "Jane Smith",
+      email: "jane.smith@company.com",
+      role: "Frontend Developer",
+      avatar_url: undefined,
+      project_id: "project-1",
+      project_name: "AI Work Tracker",
+      open_issues: 8,
+      high_priority_issues: 1,
+      commits_count: 18,
+      prs_count: 5,
+      prs_open: 2,
+      last_active: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      workload_status: "high",
+    },
+    {
+      id: "user-3",
+      name: "Mike Johnson",
+      email: "mike.johnson@company.com",
+      role: "Backend Developer",
+      avatar_url: undefined,
+      project_id: "project-1",
+      project_name: "AI Work Tracker",
+      open_issues: 12,
+      high_priority_issues: 4,
+      commits_count: 15,
+      prs_count: 6,
+      prs_open: 4,
+      last_active: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      workload_status: "overloaded",
+    },
+    {
+      id: "user-4",
+      name: "Sarah Williams",
+      email: "sarah.williams@company.com",
+      role: "DevOps Engineer",
+      avatar_url: undefined,
+      project_id: "project-1",
+      project_name: "AI Work Tracker",
+      open_issues: 3,
+      high_priority_issues: 0,
+      commits_count: 30,
+      prs_count: 10,
+      prs_open: 1,
+      last_active: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+      workload_status: "balanced",
+    },
+  ],
+  total_members: 4,
+};
+
 function getWorkloadBadgeVariant(status: string): "default" | "secondary" | "destructive" {
   switch (status) {
     case "overloaded":

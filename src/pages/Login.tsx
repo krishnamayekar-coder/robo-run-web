@@ -20,13 +20,10 @@ function Login() {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Clear form fields on mount and when location changes (e.g., after logout)
   useLayoutEffect(() => {
-    // Only redirect if token exists and is valid (not expired)
     if (isTokenValid()) {
       navigate('/dashboard', { replace: true });
     } else {
-      // Clear form fields if no valid token (e.g., after logout)
       setEmail("");
       setPassword("");
       setShowPassword(false);
@@ -53,7 +50,6 @@ function Login() {
         localStorage.setItem('accessToken', result.auth_result.AccessToken);
         localStorage.setItem('refreshToken', result.auth_result.RefreshToken);
         
-        // Clear all form fields for security before navigation
         setEmail("");
         setPassword("");
         setShowPassword(false);
@@ -125,11 +121,11 @@ function Login() {
 
               {!isForgot ? (
                 <>
-                  <p className="text-gray-600 mb-6">
+                  <div className="text-gray-600 mb-6">
                     <h3 className="text-foreground text-lg font-semibold mb-2">
                       Welcome to Activity Tracker - Sign in to access your activity dashboard
                     </h3>
-                  </p>
+                  </div>
 
                   <form 
                     className="space-y-4"

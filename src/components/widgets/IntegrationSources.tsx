@@ -269,7 +269,6 @@ export function IntegrationSources({ isPersonal = true }: IntegrationSourcesProp
     setConnectDialogOpen(true);
   };
 
-  // Dummy data for demonstration
   const dummyData: IntegrationSourcesResponse = {
     integrations: [
       {
@@ -329,7 +328,6 @@ export function IntegrationSources({ isPersonal = true }: IntegrationSourcesProp
     total_disconnected: 2,
   };
 
-  // Use dummy data if API fails or returns empty, or if still loading
   const displayData = (!isLoading && !error && data && data.integrations.length > 0) 
     ? data 
     : (!isLoading ? dummyData : null);

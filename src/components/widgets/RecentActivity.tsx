@@ -89,7 +89,6 @@ export function RecentActivity({ isPersonal = false }: RecentActivityProps) {
 
     if (gitData?.recent_commits) {
       gitData.recent_commits.forEach((commit: any, index: number) => {
-        // Handle different API response structures
         const commitId = commit.id || commit.commit_id || `commit-${index}-${Date.now()}`;
         const commitMessage = commit.message || commit.commit_message || "commit";
         const authorEmail = commit.author_email || commit.author || "";

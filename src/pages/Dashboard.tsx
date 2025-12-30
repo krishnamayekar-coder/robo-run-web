@@ -16,10 +16,19 @@ import { TeamMembers } from "@/components/widgets/TeamMembers";
 import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
 import { CustomiseDrawer, WidgetConfig } from "@/components/CustomiseDrawer";
-import { FileText, Layout, Users, User } from "lucide-react";
+import { FileText, Layout, Users, User, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useLazyGenerateReportQuery } from "@/store/api";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import jsPDF from "jspdf";
+import { cn } from "@/lib/utils";
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "team-metrics", name: "Team Metrics Summary", icon: "📊", visible: true, order: 0 },
@@ -57,10 +66,23 @@ export default function Dashboard() {
     return DEFAULT_WIDGETS;
   });
   const { toast } = useToast();
+  const [generateReport, { isLoading: isGeneratingReport }] = useLazyGenerateReportQuery();
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [isDetailed, setIsDetailed] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("dashboard-widgets", JSON.stringify(widgets));
   }, [widgets]);
+
+  useEffect(() => {
+    const currentDate = new Date();
+    const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+    const endOfYear = new Date(currentDate.getFullYear(), 11, 31);
+    setStartDate(startOfYear);
+    setEndDate(endOfYear);
+  }, []);
 
   const widgetMap = useMemo(() => {
     const map: Record<string, { component: React.ReactNode; column: "left" | "right" | "bottom" }> = {
@@ -107,8 +129,15 @@ export default function Dashboard() {
   const handleGenerateReport = () => {
     toast({
       title: "Report Generated",
-      description: "Your dashboard report has been generated successfully.",
-    });
+        description: `Your ${isDetailed ? 'detailed' : 'summary'} report has been downloaded successfully.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.data?.message || "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -158,6 +187,7 @@ export default function Dashboard() {
                   id="dashboard-toggle"
                   checked={isMyDashboard}
                   onCheckedChange={setIsMyDashboard}
+                  disabled
                   className="data-[state=checked]:bg-primary scale-90 sm:scale-100"
                 />
                 <div className="flex items-center gap-1 sm:gap-1.5">
@@ -173,7 +203,7 @@ export default function Dashboard() {
               </div>
 
               <div
-                onClick={handleGenerateReport}
+                onClick={() => setReportDialogOpen(true)}
                 className="glass-card rounded-xl px-3 py-2 h-10 flex items-center cursor-pointer transition-all duration-300 hover:translate-y-[-1px]"
               >
                 <div className="flex items-center gap-2">
@@ -241,6 +271,109 @@ export default function Dashboard() {
           onWidgetsChange={setWidgets}
           defaultWidgets={DEFAULT_WIDGETS}
         />
+
+        <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">Generate Activity Tracker Report</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Select the date range and report type for your activity tracker report.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-6 py-4">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="start-date" className="text-sm font-medium">Start Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="start-date"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="end-date" className="text-sm font-medium">End Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="end-date"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 rounded-lg border p-4">
+                <Checkbox
+                  id="detailed-report"
+                  checked={isDetailed}
+                  onCheckedChange={(checked) => setIsDetailed(checked === true)}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <Label
+                    htmlFor="detailed-report"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Generate Detailed PDF
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Include complete data list (Summary includes top 20 items per section)
+                  </p>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setReportDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleGenerateReport} disabled={isGeneratingReport || !startDate || !endDate}>
+                {isGeneratingReport ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Generate Report
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );

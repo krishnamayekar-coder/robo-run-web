@@ -1,10 +1,3 @@
-/**
- * Auth utility functions for token validation and user activity tracking
- */
-
-/**
- * Decodes a JWT token and returns its payload
- */
 export function decodeJWT(token: string): any | null {
   try {
     const parts = token.split('.');
@@ -19,9 +12,6 @@ export function decodeJWT(token: string): any | null {
   }
 }
 
-/**
- * Checks if a JWT token is expired
- */
 export function isTokenExpired(token: string): boolean {
   const decoded = decodeJWT(token);
   if (!decoded || !decoded.exp) return true;
@@ -32,9 +22,6 @@ export function isTokenExpired(token: string): boolean {
   return currentTime >= expirationTime;
 }
 
-/**
- * Checks if a token exists and is valid (not expired)
- */
 export function isTokenValid(): boolean {
   if (typeof window === 'undefined') return false;
   
@@ -44,9 +31,6 @@ export function isTokenValid(): boolean {
   return !isTokenExpired(token);
 }
 
-/**
- * Gets the token expiration time in milliseconds
- */
 export function getTokenExpirationTime(token: string): number | null {
   const decoded = decodeJWT(token);
   if (!decoded || !decoded.exp) return null;
@@ -54,9 +38,6 @@ export function getTokenExpirationTime(token: string): number | null {
   return decoded.exp * 1000;
 }
 
-/**
- * Clears all auth-related data from localStorage
- */
 export function clearAuthData(): void {
   if (typeof window === 'undefined') return;
   
@@ -66,9 +47,6 @@ export function clearAuthData(): void {
   localStorage.removeItem('userRole');
 }
 
-/**
- * Gets the current token from localStorage
- */
 export function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('idToken');
