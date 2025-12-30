@@ -360,64 +360,58 @@ export function IntegrationSources({ isPersonal = true }: IntegrationSourcesProp
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {displayData?.integrations.length === 0 ? (
-            <div className="text-sm text-muted-foreground p-3 text-center">
+            <div className="col-span-full text-sm text-muted-foreground p-3 text-center">
               No integrations configured
             </div>
           ) : (
             displayData?.integrations.map((integration) => (
-              <Card key={integration.id} className="p-4 glass-card">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{INTEGRATION_ICONS[integration.type]}</span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-foreground capitalize">{integration.name}</h3>
-                        {getStatusIcon(integration.status)}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge 
-                          variant="outline" 
-                          className={`text-[10px] ${getStatusColor(integration.status)}`}
-                        >
-                          {integration.status}
-                        </Badge>
-                        {integration.last_sync && (
-                          <span className="text-xs text-muted-foreground">
-                            Last synced: {formatDistanceToNow(new Date(integration.last_sync), { addSuffix: true })}
-                          </span>
-                        )}
-                        {integration.error_message && (
-                          <span className="text-xs text-destructive">
-                            {integration.error_message}
-                          </span>
-                        )}
-                      </div>
-                      {integration.config.base_url && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {integration.config.base_url}
-                        </p>
-                      )}
-                    </div>
+              <Card key={integration.id} className="p-3 glass-card border border-border/50 hover:border-primary/50 hover:shadow-sm transition-all">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center justify-center w-full">
+                    <span className="text-3xl">{INTEGRATION_ICONS[integration.type]}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="w-full text-center">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <h3 className="font-semibold text-sm text-foreground capitalize">{integration.name}</h3>
+                      {getStatusIcon(integration.status)}
+                    </div>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-[10px] ${getStatusColor(integration.status)}`}
+                    >
+                      {integration.status}
+                    </Badge>
+                  </div>
+                  {integration.last_sync && (
+                    <div className="text-xs text-muted-foreground text-center w-full">
+                      {formatDistanceToNow(new Date(integration.last_sync), { addSuffix: true })}
+                    </div>
+                  )}
+                  {integration.error_message && (
+                    <div className="text-xs text-destructive text-center w-full truncate" title={integration.error_message}>
+                      {integration.error_message}
+                    </div>
+                  )}
+                  <div className="w-full mt-1">
                     {integration.status === "connected" ? (
-                      <>
+                      <div className="flex flex-col gap-1.5">
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full text-xs h-7"
                           onClick={() => handleSync(integration.id, integration.name)}
                           disabled={syncingId === integration.id || isSyncing}
                         >
                           {syncingId === integration.id ? (
                             <>
-                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                              Syncing...
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                              Syncing
                             </>
                           ) : (
                             <>
-                              <RefreshCw className="mr-2 h-3 w-3" />
+                              <RefreshCw className="mr-1 h-3 w-3" />
                               Sync
                             </>
                           )}
@@ -425,15 +419,17 @@ export function IntegrationSources({ isPersonal = true }: IntegrationSourcesProp
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full text-xs h-7"
                           onClick={() => handleDisconnect(integration.id, integration.name)}
                           disabled={isDisconnecting}
                         >
                           Disconnect
                         </Button>
-                      </>
+                      </div>
                     ) : (
                       <Button
                         size="sm"
+                        className="w-full text-xs h-7"
                         onClick={() => openConnectDialog(integration.type)}
                         disabled={isConnecting}
                       >

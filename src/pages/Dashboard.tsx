@@ -46,7 +46,7 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
 ];
 
 const PROJECTS = [
-  { id: "project-1", name: "AI Work Tracker" },
+  { id: "project-1", name: "Activity Tracker" },
 ];
 
 export default function Dashboard() {
@@ -96,8 +96,8 @@ export default function Dashboard() {
       "ai-insights": { component: <AISummaryInsights key="ai-insights" isPersonal={isMyDashboard} />, column: "right" },
       "recent-activity": { component: <RecentActivity key="recent-activity" isPersonal={isMyDashboard} />, column: "right" },
       "confluence": { component: <ConfluenceContributions key="confluence" isPersonal={isMyDashboard} />, column: "right" },
-      "team-members": { component: <TeamMembers key="team-members" projectId={selectedProject} isPersonal={isMyDashboard} />, column: "right" },
-      "integrations": { component: <IntegrationSources key="integrations" isPersonal={isMyDashboard} />, column: "left" },
+      "team-members": { component: <TeamMembers key="team-members" projectId={selectedProject} />, column: "bottom" },
+      "integrations": { component: <IntegrationSources key="integrations" isPersonal={isMyDashboard} />, column: "bottom" },
     };
     return map;
   }, [isMyDashboard, selectedProject]);
@@ -126,17 +126,203 @@ export default function Dashboard() {
       .filter(Boolean);
   }, [widgets, widgetMap]);
 
-  const handleGenerateReport = () => {
-    try {
-      toast({
-        title: "Report Generated",
-        description: `Your ${isDetailed ? 'detailed' : 'summary'} report has been downloaded successfully.`,
-      });
-    } catch (error) {
-      const err = error as any;
+  const handleGenerateReport = async () => {
+    if (!startDate || !endDate) {
       toast({
         title: "Error",
-        description: err?.data?.message || "Failed to generate report. Please try again.",
+        description: "Please select both start and end dates.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await generateReport({
+        start_date: format(startDate, "yyyy-MM-dd"),
+        end_date: format(endDate, "yyyy-MM-dd"),
+        is_detailed: isDetailed,
+      }).unwrap();
+
+      const data = (response as any).data || response;
+        
+        const pdf = new jsPDF();
+        let yPosition = 20;
+        const pageHeight = pdf.internal.pageSize.height;
+        const margin = 20;
+        const maxWidth = pdf.internal.pageSize.width - 2 * margin;
+
+        const addPageIfNeeded = () => {
+          if (yPosition > pageHeight - 30) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+        };
+
+        pdf.setFontSize(18);
+        pdf.setFont(undefined, 'bold');
+        pdf.text("Activity Tracker Report", margin, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'normal');
+        pdf.text(`Period: ${format(startDate, "PPP")} to ${format(endDate, "PPP")}`, margin, yPosition);
+        yPosition += 5;
+        pdf.text(`Report Type: ${isDetailed ? 'Detailed' : 'Summary'}`, margin, yPosition);
+        yPosition += 10;
+
+        if (data.jira_issues && Array.isArray(data.jira_issues)) {
+          addPageIfNeeded();
+          pdf.setFontSize(14);
+          pdf.setFont(undefined, 'bold');
+          pdf.text("Jira Issues", margin, yPosition);
+          yPosition += 8;
+
+          pdf.setFontSize(9);
+          pdf.setFont(undefined, 'normal');
+          
+          const header = ["ID", "Ticket", "Status", "Priority", "Assignee", "Reporter"];
+          const colWidths = [15, 40, 30, 25, 35, 35];
+          let xPos = margin;
+
+          pdf.setFont(undefined, 'bold');
+          header.forEach((text, i) => {
+            pdf.text(text, xPos, yPosition);
+            xPos += colWidths[i];
+          });
+          yPosition += 6;
+
+          pdf.setFont(undefined, 'normal');
+          const jiraIssues = isDetailed ? data.jira_issues : data.jira_issues.slice(0, 20);
+          
+          jiraIssues.forEach((issue: any[]) => {
+            addPageIfNeeded();
+            xPos = margin;
+            const issueId = String(issue[0] || 'N/A');
+            const ticket = String(issue[1] || 'N/A');
+            const status = String(issue[2] || 'N/A');
+            const priority = String(issue[3] || 'N/A');
+            const assignee = String(issue[5] || 'N/A');
+            const reporter = String(issue[6] || 'N/A');
+
+            pdf.text(issueId.substring(0, 10), xPos, yPosition);
+            xPos += colWidths[0];
+            pdf.text(ticket.substring(0, 20), xPos, yPosition);
+            xPos += colWidths[1];
+            pdf.text(status.substring(0, 15), xPos, yPosition);
+            xPos += colWidths[2];
+            pdf.text(priority.substring(0, 12), xPos, yPosition);
+            xPos += colWidths[3];
+            pdf.text(assignee.substring(0, 17), xPos, yPosition);
+            xPos += colWidths[4];
+            pdf.text(reporter.substring(0, 17), xPos, yPosition);
+            yPosition += 6;
+          });
+          yPosition += 5;
+        }
+
+        if (data.github_pull_requests && Array.isArray(data.github_pull_requests)) {
+          addPageIfNeeded();
+          pdf.setFontSize(14);
+          pdf.setFont(undefined, 'bold');
+          pdf.text("GitHub Pull Requests", margin, yPosition);
+          yPosition += 8;
+
+          pdf.setFontSize(9);
+          pdf.setFont(undefined, 'normal');
+          
+          const header = ["PR #", "Title", "State", "Author", "Merged"];
+          const colWidths = [20, 80, 25, 30, 20];
+          let xPos = margin;
+
+          pdf.setFont(undefined, 'bold');
+          header.forEach((text, i) => {
+            pdf.text(text, xPos, yPosition);
+            xPos += colWidths[i];
+          });
+          yPosition += 6;
+
+          pdf.setFont(undefined, 'normal');
+          const prs = isDetailed ? data.github_pull_requests : data.github_pull_requests.slice(0, 20);
+          
+          prs.forEach((pr: any[]) => {
+            addPageIfNeeded();
+            xPos = margin;
+            const prNumber = String(pr[3] || 'N/A');
+            const title = String(pr[4] || 'N/A');
+            const state = String(pr[6] || 'N/A');
+            const author = String(pr[7] || 'N/A');
+            const merged = pr[9] ? 'Yes' : 'No';
+
+            pdf.text(prNumber, xPos, yPosition);
+            xPos += colWidths[0];
+            pdf.text(title.substring(0, 40), xPos, yPosition);
+            xPos += colWidths[1];
+            pdf.text(state, xPos, yPosition);
+            xPos += colWidths[2];
+            pdf.text(author.substring(0, 15), xPos, yPosition);
+            xPos += colWidths[3];
+            pdf.text(merged, xPos, yPosition);
+            yPosition += 6;
+          });
+          yPosition += 5;
+        }
+
+        if (data.jira_sprint_progress && Array.isArray(data.jira_sprint_progress)) {
+          addPageIfNeeded();
+          pdf.setFontSize(14);
+          pdf.setFont(undefined, 'bold');
+          pdf.text("Sprint Progress", margin, yPosition);
+          yPosition += 8;
+
+          pdf.setFontSize(9);
+          pdf.setFont(undefined, 'normal');
+          
+          const header = ["Sprint Name", "State", "Start Date", "End Date"];
+          const colWidths = [60, 30, 40, 40];
+          let xPos = margin;
+
+          pdf.setFont(undefined, 'bold');
+          header.forEach((text, i) => {
+            pdf.text(text, xPos, yPosition);
+            xPos += colWidths[i];
+          });
+          yPosition += 6;
+
+          pdf.setFont(undefined, 'normal');
+          const sprints = isDetailed ? data.jira_sprint_progress : data.jira_sprint_progress.slice(0, 20);
+          
+          sprints.forEach((sprint: any[]) => {
+            addPageIfNeeded();
+            xPos = margin;
+            const sprintName = String(sprint[3] || 'N/A');
+            const state = String(sprint[4] || 'N/A');
+            const startDate = sprint[5] ? format(new Date(sprint[5]), "MMM dd, yyyy") : 'N/A';
+            const endDate = sprint[6] ? format(new Date(sprint[6]), "MMM dd, yyyy") : 'N/A';
+
+            pdf.text(sprintName.substring(0, 30), xPos, yPosition);
+            xPos += colWidths[0];
+            pdf.text(state, xPos, yPosition);
+            xPos += colWidths[1];
+            pdf.text(startDate, xPos, yPosition);
+            xPos += colWidths[2];
+            pdf.text(endDate, xPos, yPosition);
+            yPosition += 6;
+          });
+        }
+
+        const fileName = `activity-report-${format(startDate, "yyyy-MM-dd")}-to-${format(endDate, "yyyy-MM-dd")}.pdf`;
+        pdf.save(fileName);
+
+        toast({
+          title: "Report Generated",
+          description: `Your ${isDetailed ? 'detailed' : 'summary'} report has been downloaded successfully.`,
+        });
+        
+        setReportDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.data?.message || error?.message || "Failed to generate report. Please try again.",
         variant: "destructive",
       });
     }
@@ -145,7 +331,7 @@ export default function Dashboard() {
   return (
     <>
       <Helmet>
-        <title>{isMyDashboard ? "My Dashboard" : "Team Insights"} | AI WorkTracker</title>
+        <title>{isMyDashboard ? "My Dashboard" : "Team Insights"} | Activity Tracker</title>
         <meta name="description" content="AI-powered team analytics and work tracking dashboard. Monitor sprint progress, detect risks, and get actionable insights." />
       </Helmet>
       
@@ -251,15 +437,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Bottom Section - Same width as Detailed Risk Detection (left column) */}
+          {/* Bottom Section - Full width horizontal layout */}
           {bottomWidgets.length > 0 && (
-            <div className="mt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                  {bottomWidgets}
-                </div>
-                <div className="hidden lg:block"></div> {/* Spacer for right column */}
-              </div>
+            <div className="mt-6 space-y-6">
+              {bottomWidgets}
             </div>
           )}
         </main>

@@ -273,12 +273,12 @@ export function Header({
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 glass-card rounded-xl px-3 py-2 h-10">
               <img
                 src={logo}
-                alt="AI WorkTracker"
+                alt="Activity Tracker"
                 className="h-7 w-7 sm:h-8 sm:w-8 shrink-0"
               />
               <div className="flex flex-col min-w-0">
                 <span className="font-heading text-sm sm:text-base font-bold text-foreground truncate">
-                  AI WorkTracker
+                  Activity Tracker
                 </span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider hidden sm:block">
                   Team Analytics
