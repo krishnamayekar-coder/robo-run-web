@@ -30,8 +30,12 @@ export function WorkloadDistribution() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { data: workloadData, isLoading } = useGetWorkloadDistributionQuery();
   
-  const workload = workloadData?.workload || [];
-  const pullRequests = workloadData?.pull_requests || [];
+  const workload = Array.isArray(workloadData) 
+    ? workloadData 
+    : (workloadData?.workload || []);
+  const pullRequests = Array.isArray(workloadData) 
+    ? [] 
+    : (workloadData?.pull_requests || []);
   
   const prsByAuthor = pullRequests.reduce((acc, pr) => {
     const status = pr.status?.toUpperCase();
@@ -62,7 +66,7 @@ export function WorkloadDistribution() {
   };
   
   const avgOpenIssues = workload.length > 0 
-    ? workload.reduce((sum, item) => sum + item.open_issues, 0) / workload.length 
+    ? (workload as any[]).reduce((sum: number, item: any) => sum + (item.open_issues || 0), 0) / workload.length 
     : 0;
   
   const teamMembers: TeamMember[] = workload.map((item) => {
