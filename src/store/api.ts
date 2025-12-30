@@ -16,6 +16,8 @@ import type {
   TeamMembersResponse,
   ReportResponse,
   AISummaryResponse,
+  AIFactsRequest,
+  AIFactsResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
@@ -67,6 +69,14 @@ export const api = createApi({
     getAISummary: builder.query<AISummaryResponse, void>({
       query: () => '/ai/summary',
       providesTags: ['TeamInsights'],
+    }),
+    
+    getAIFacts: builder.mutation<AIFactsResponse, AIFactsRequest>({
+      query: (body) => ({
+        url: '/facts',
+        method: 'POST',
+        body,
+      }),
     }),
     
     getPRBottlenecks: builder.query<PRBottlenecksResponse, void>({
@@ -166,6 +176,7 @@ export const {
   useLoginMutation,
   useLazyGenerateReportQuery,
   useGetAISummaryQuery,
+  useGetAIFactsMutation,
 } = api;
 
 export type {

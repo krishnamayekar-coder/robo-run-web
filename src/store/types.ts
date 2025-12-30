@@ -288,3 +288,13 @@ export interface AISummaryResponse {
   confidence: number;
 }
 
+export interface AIFactsRequest {
+  question: string;
+}
+
+export interface AIFactsResponse {
+  facts: string;
+  sources: string[];
+  confidence: number;
+}
+
