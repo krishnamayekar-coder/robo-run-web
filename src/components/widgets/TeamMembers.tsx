@@ -33,17 +33,7 @@ function getWorkloadLabel(status: string): string {
 
 export function TeamMembers({ projectId, isPersonal = true }: TeamMembersProps) {
   // Check user role to determine if they can access /users/details
-  // If no role in localStorage, check if using default token (DEV_MANAGER)
-  let userRole = localStorage.getItem('userRole') || '';
-  if (!userRole) {
-    // Check if we're using the default token (DEV_MANAGER role)
-    const token = localStorage.getItem('idToken');
-    if (!token) {
-      // Using default token, set role to DEV_MANAGER
-      userRole = 'DEV_MANAGER';
-      localStorage.setItem('userRole', userRole);
-    }
-  }
+  const userRole = localStorage.getItem('userRole') || '';
   const isManager = userRole === 'MANAGER' || userRole === 'DEV_MANAGER' || userRole.includes('MANAGER');
   
   // Use the new /users/details API only if user is a manager
