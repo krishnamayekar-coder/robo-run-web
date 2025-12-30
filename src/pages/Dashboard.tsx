@@ -359,6 +359,7 @@ export default function Dashboard() {
                   id="dashboard-toggle"
                   checked={isMyDashboard}
                   onCheckedChange={setIsMyDashboard}
+                  disabled
                   className="data-[state=checked]:bg-primary scale-90 sm:scale-100"
                 />
                 <div className="flex items-center gap-1 sm:gap-1.5">
