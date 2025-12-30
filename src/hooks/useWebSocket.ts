@@ -7,18 +7,15 @@ let currentFromNo = null;
 let currentToNo = null;
 let isReconnecting = false;
 
-// Store one-time connect promise to prevent multiple connections
 let connectingPromise = null;
 
 export function connectWebSocket(from_no, to_no) {
-  // If already connecting, return the same promise
   if (connectingPromise) return connectingPromise;
 
   currentFromNo = from_no;
   currentToNo = to_no;
 
   connectingPromise = new Promise((resolve, reject) => {
-    // Clean up existing socket if any
     if (socket) {
       socket.close();
       socket = null;
@@ -34,12 +31,10 @@ export function connectWebSocket(from_no, to_no) {
       console.log("✅ WebSocket connected:", { from_no, to_no });
       reconnectAttempts = 0;
 
-      // Flush queued messages
       while (messageQueue.length > 0) {
         socket.send(messageQueue.shift());
       }
 
-      // Fetch initial data after connect
       fetchMessages(from_no, to_no);
       fetchConversations();
 
@@ -63,7 +58,6 @@ export function connectWebSocket(from_no, to_no) {
         const data = JSON.parse(message.data);
         console.log("📩 WebSocket event received:", message.data);
         if (data.event && callbacks[data.event]) {
-          // Call each registered listener only once per message
           callbacks[data.event].forEach((cb) => cb(data));
         }
       } catch (e) {
@@ -93,7 +87,6 @@ function attemptReconnect() {
   }, reconnectInterval);
 }
 
-// ✅ Send messages safely
 function safeSend(payload) {
   const msg = JSON.stringify(payload);
   if (socket && socket.readyState === WebSocket.OPEN) {
@@ -104,7 +97,6 @@ function safeSend(payload) {
   }
 }
 
-// ✅ Send chat message
 export function sendMessage(from_no, to_no, body, twilio = false) {
   safeSend({
     action: "sendMessage",
@@ -115,7 +107,6 @@ export function sendMessage(from_no, to_no, body, twilio = false) {
   });
 }
 
-// ✅ Send SMS (Twilio)
 export function sendSMS(from_no, to_no, body) {
   if (!from_no || !to_no || !body) return;
   safeSend({
@@ -126,23 +117,19 @@ export function sendSMS(from_no, to_no, body) {
   });
 }
 
-// ✅ Fetch messages
 export function fetchMessages(from_no, to_no) {
   safeSend({ action: "fetchMessages", from_no, to_no });
 }
 
-// ✅ Fetch all conversations
 export function fetchConversations() {
   safeSend({ action: "route1" });
 }
 
-// ✅ Reset unread count
 export function resetConversationUnread(from_no, to_no) {
   if (!from_no || !to_no) return;
   safeSend({ action: "reset_conversation_unread", from_no, to_no });
 }
 
-// ✅ Event listeners
 export function onEvent(event, callback) {
   if (!callbacks[event]) callbacks[event] = [];
   if (!callbacks[event].includes(callback)) {
@@ -150,13 +137,6 @@ export function onEvent(event, callback) {
   }
 }
 
-// ✅ Remove event listener
-// export function offEvent(event, callback) {
-//   if (!callbacks[event]) return;
-//   callbacks[event] = callbacks[event].filter((cb) => cb !== callback);
-// }
-
-// ✅ Disconnect socket
 export function disconnect() {
   if (socket) {
     socket.close();

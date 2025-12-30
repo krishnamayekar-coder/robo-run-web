@@ -52,34 +52,23 @@ export function RiskStatsWidget({ isPersonal = false }: RiskStatsWidgetProps) {
 
   const isLoading = bottlenecksLoading || insightsLoading;
 
-  // Get all bottlenecks from API
   const allBottlenecks = bottlenecksData?.bottlenecks || [];
   
-  // Filter only OPEN PRs for "PRs Stuck" (only count currently active bottlenecks)
   const openBottlenecks = allBottlenecks.filter(pr => {
     const state = pr.state?.toLowerCase();
     return state === "open" || state === "draft";
   });
   
-  // Count PRs by idle days (only OPEN PRs count as "stuck")
   const prsStuck = openBottlenecks.filter(pr => pr.idle_days > 0).length;
   
-  // Critical PRs: open PRs with idle_days >= 7
   const criticalIncidents = openBottlenecks.filter(pr => pr.idle_days >= 7).length;
   
-  // High Priority Delayed: from team insights
-  const highPriorityDelayed = teamInsights?.team_metrics_summary?.high_priority_inactive?.count || 0;
+  const highPriorityPastDue = teamInsights?.team_metrics_summary?.high_priority_inactive?.count || 0;
   
-  // At-Risk Jira: calculate from pending issues (total pending - completed)
-  const pendingIssues = teamInsights?.pending_vs_completed?.pending || 0;
-  const completedIssues = teamInsights?.pending_vs_completed?.completed || 0;
-  const totalIssues = pendingIssues + completedIssues;
-  const atRiskJira = pendingIssues; // At-risk = pending issues
+  const atRiskJira = teamInsights?.pending_vs_completed?.pending || 0;
   
-  // Risk Stats Overview: total count of all risk indicators
-  const riskStatsOverview = prsStuck + criticalIncidents + highPriorityDelayed + atRiskJira;
+  const riskStatsOverview = prsStuck + criticalIncidents + highPriorityPastDue + atRiskJira;
   
-  // Calculate trend percentages (relative to expected ranges for better visualization)
   const calculateTrendPercent = (value: number, maxRange: number) => {
     if (maxRange === 0) return 0;
     return Math.min(Math.round((value / maxRange) * 100), 100);
@@ -107,23 +96,15 @@ export function RiskStatsWidget({ isPersonal = false }: RiskStatsWidgetProps) {
       value: atRiskJira,
       severity: atRiskJira >= 50 ? "critical" : atRiskJira >= 20 ? "high" : atRiskJira > 0 ? "medium" : "low",
       trend: atRiskJira > 0 ? "up" : "down",
-      trendValue: totalIssues > 0 ? calculateTrendPercent(atRiskJira, totalIssues) : calculateTrendPercent(atRiskJira, 50),
+      trendValue: calculateTrendPercent(atRiskJira, 50),
     },
     {
       icon: <Flame className="h-4 w-4" />,
-      label: "High Priority Delayed",
-      value: highPriorityDelayed,
-      severity: highPriorityDelayed >= 5 ? "critical" : highPriorityDelayed >= 2 ? "high" : highPriorityDelayed > 0 ? "medium" : "low",
-      trend: highPriorityDelayed > 0 ? "up" : "down",
-      trendValue: calculateTrendPercent(highPriorityDelayed, 6),
-    },
-    {
-      icon: <GitPullRequest className="h-4 w-4" />,
-      label: "Critical Incidents",
-      value: criticalIncidents,
-      severity: criticalIncidents >= 5 ? "critical" : criticalIncidents >= 2 ? "high" : criticalIncidents > 0 ? "medium" : "low",
-      trend: criticalIncidents > 0 ? "up" : "down",
-      trendValue: calculateTrendPercent(criticalIncidents, 60),
+      label: "High Priority – Past Due",
+      value: highPriorityPastDue,
+      severity: highPriorityPastDue >= 5 ? "critical" : highPriorityPastDue >= 2 ? "high" : highPriorityPastDue > 0 ? "medium" : "low",
+      trend: highPriorityPastDue > 0 ? "up" : "down",
+      trendValue: calculateTrendPercent(highPriorityPastDue, 6),
     },
     {
       icon: <GitPullRequest className="h-4 w-4" />,
@@ -132,6 +113,14 @@ export function RiskStatsWidget({ isPersonal = false }: RiskStatsWidgetProps) {
       severity: prsStuck >= 5 ? "critical" : prsStuck >= 3 ? "high" : prsStuck > 0 ? "medium" : "low",
       trend: prsStuck > 0 ? "up" : "down",
       trendValue: calculateTrendPercent(prsStuck, 25),
+    },
+    {
+      icon: <GitPullRequest className="h-4 w-4" />,
+      label: "Critical Incidents",
+      value: criticalIncidents,
+      severity: criticalIncidents >= 5 ? "critical" : criticalIncidents >= 2 ? "high" : criticalIncidents > 0 ? "medium" : "low",
+      trend: criticalIncidents > 0 ? "up" : "down",
+      trendValue: calculateTrendPercent(criticalIncidents, 60),
     },
   ];
 

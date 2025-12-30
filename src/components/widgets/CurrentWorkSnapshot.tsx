@@ -24,7 +24,6 @@ interface CurrentWorkSnapshotProps {
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return "??";
-  // Extract name from email format (e.g., "krishna.mayekar@aithinkers.com" -> "KM")
   const namePart = name.split("@")[0];
   const parts = namePart.split(".");
   if (parts.length > 1) {

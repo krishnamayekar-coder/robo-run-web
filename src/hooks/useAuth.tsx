@@ -2,12 +2,9 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isTokenValid, isTokenExpired, getAuthToken, clearAuthData } from '@/lib/auth';
 
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
-const TOKEN_CHECK_INTERVAL = 60 * 1000; // Check token every minute
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
+const TOKEN_CHECK_INTERVAL = 60 * 1000;
 
-/**
- * Hook for managing user authentication state, activity tracking, and auto-logout
- */
 export function useAuth() {
   const navigate = useNavigate();
   const lastActivityRef = useRef<number>(Date.now());
@@ -22,13 +19,11 @@ export function useAuth() {
   const updateActivity = useCallback(() => {
     lastActivityRef.current = Date.now();
     
-    // Reset inactivity timeout
     if (inactivityTimeoutRef.current) {
       clearTimeout(inactivityTimeoutRef.current);
     }
     
     inactivityTimeoutRef.current = setTimeout(() => {
-      // User has been inactive for the timeout period
       handleLogout();
     }, INACTIVITY_TIMEOUT);
   }, [handleLogout]);
@@ -45,27 +40,22 @@ export function useAuth() {
   }, [handleLogout]);
 
   useEffect(() => {
-    // Initial token check
     if (!checkTokenValidity()) {
       return;
     }
 
-    // Set up activity event listeners
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     
     events.forEach(event => {
       document.addEventListener(event, updateActivity, true);
     });
 
-    // Initial inactivity timeout
     updateActivity();
 
-    // Set up periodic token validation
     tokenCheckIntervalRef.current = setInterval(() => {
       checkTokenValidity();
     }, TOKEN_CHECK_INTERVAL);
 
-    // Cleanup function
     return () => {
       events.forEach(event => {
         document.removeEventListener(event, updateActivity, true);

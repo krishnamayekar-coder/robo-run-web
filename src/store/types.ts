@@ -202,7 +202,6 @@ export interface LoginResponse {
   auth_result: AuthResult;
 }
 
-// Integration Sources Types
 export type IntegrationType = "jira" | "github" | "confluence" | "slack" | "gitlab";
 
 export type IntegrationStatus = "connected" | "disconnected" | "error" | "syncing";
@@ -214,7 +213,7 @@ export interface IntegrationSource {
   status: IntegrationStatus;
   connected_at: string | null;
   last_sync: string | null;
-  project_id: string | null; // null if global integration
+  project_id: string | null;
   config: {
     base_url?: string;
     workspace?: string;
@@ -242,7 +241,6 @@ export interface SyncIntegrationResponse {
   last_sync: string;
 }
 
-// Team Members Types
 export interface TeamMember {
   id: string;
   name: string;

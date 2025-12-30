@@ -39,7 +39,6 @@ export function Settings({ open, onOpenChange }: SettingsProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const { toast } = useToast();
 
-  // Clear password fields when settings sheet opens
   useEffect(() => {
     if (open) {
       setCurrentPassword("");

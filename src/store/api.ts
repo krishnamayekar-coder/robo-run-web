@@ -33,7 +33,6 @@ export const api = createApi({
       return headers;
     },
   }),
-  // Auto-refetch queries on window focus to keep data fresh
   refetchOnFocus: true,
   refetchOnReconnect: true,
   tagTypes: ['RecentActivity', 'GitActivity', 'SprintProgress', 'TeamInsights', 'PRBottlenecks', 'WorkloadDistribution', 'SprintLoadOverview', 'IntegrationSources', 'TeamMembers'],

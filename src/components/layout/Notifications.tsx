@@ -27,11 +27,9 @@ function Notifications() {
 
         setConnected(true);
 
-        // Clear previous listeners first
         offEvent("new_message", handleNewMessage);
         offEvent("fetchedMessages", handleFetchedMessages);
 
-        // Register event listeners
         onEvent("new_message", handleNewMessage);
         onEvent("fetchedMessages", handleFetchedMessages);
 
@@ -41,7 +39,6 @@ function Notifications() {
       }
     }
 
-    // Handlers
     function handleNewMessage(data) {
       console.log("new_message", data);
       setToast(data.message);

@@ -11,7 +11,6 @@ interface TeamMembersProps {
   isPersonal?: boolean;
 }
 
-// Dummy data for demonstration
 const dummyData: TeamMembersResponse = {
   project_id: "project-1",
   project_name: "AI Work Tracker",
@@ -109,7 +108,6 @@ function getWorkloadLabel(status: string): string {
 export function TeamMembers({ projectId, isPersonal = true }: TeamMembersProps) {
   const { data, isLoading, error } = useGetTeamMembersQuery({ project_id: projectId });
 
-  // Use dummy data if API fails or returns empty, or if still loading
   const displayData = (!isLoading && !error && data && data.members.length > 0)
     ? data
     : (!isLoading ? dummyData : null);

@@ -32,11 +32,9 @@ function MetricCard({ icon, label, value, change, changeLabel, colorClass }: Met
 }
 
 function parseDeltaPercent(deltaStr: string | null | undefined): number {
-  // Handle null or undefined values
   if (!deltaStr || typeof deltaStr !== 'string') {
     return 0;
   }
-  // Parse strings like "+100.00%" or "-15.00%" to numbers
   const match = deltaStr.match(/[+-]?(\d+\.?\d*)/);
   return match ? parseFloat(match[0]) : 0;
 }
@@ -96,7 +94,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
     {
       icon: <AlertOctagon className="h-5 w-5 text-destructive" />,
       label: `${prefix}Incidents`,
-      value: 0, // Not available in API
+      value: 0,
       change: 0,
       changeLabel: "vs last sprint",
       colorClass: "bg-destructive/10",
