@@ -15,6 +15,7 @@ import type {
   SyncIntegrationResponse,
   TeamMembersResponse,
   ReportResponse,
+  AISummaryResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
@@ -60,6 +61,11 @@ export const api = createApi({
     
     getTeamInsights: builder.query<TeamInsightsResponse, void>({
       query: () => '/jira/team/insights',
+      providesTags: ['TeamInsights'],
+    }),
+    
+    getAISummary: builder.query<AISummaryResponse, void>({
+      query: () => '/ai/summary',
       providesTags: ['TeamInsights'],
     }),
     
@@ -159,6 +165,7 @@ export const {
   useSyncIntegrationMutation,
   useLoginMutation,
   useLazyGenerateReportQuery,
+  useGetAISummaryQuery,
 } = api;
 
 export type {

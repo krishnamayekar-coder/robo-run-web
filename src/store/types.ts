@@ -276,3 +276,15 @@ export interface ReportResponse {
   };
 }
 
+export interface AISummaryRecommendation {
+  title: string;
+  text: string;
+  impact: "High" | "Medium" | "Low";
+}
+
+export interface AISummaryResponse {
+  summary: string[];
+  recommendations: AISummaryRecommendation[];
+  confidence: number;
+}
+
