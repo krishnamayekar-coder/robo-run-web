@@ -31,8 +31,11 @@ function MetricCard({ icon, label, value, change, changeLabel, colorClass }: Met
   );
 }
 
-function parseDeltaPercent(deltaStr: string): number {
+function parseDeltaPercent(deltaStr: string | null | undefined): number {
   // Parse strings like "+100.00%" or "-15.00%" to numbers
+  if (!deltaStr || typeof deltaStr !== 'string') {
+    return 0;
+  }
   const match = deltaStr.match(/[+-]?(\d+\.?\d*)/);
   return match ? parseFloat(match[0]) : 0;
 }
@@ -61,7 +64,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
       icon: <TicketCheck className="h-5 w-5 text-primary" />,
       label: `${prefix}Jira Tickets`,
       value: teamInsights.team_metrics_summary.total_jira_tickets.count,
-      change: parseDeltaPercent(teamInsights.team_metrics_summary.total_jira_tickets.delta_percent),
+      change: parseDeltaPercent(teamInsights.team_metrics_summary.total_jira_tickets?.delta_percent),
       changeLabel: teamInsights.team_metrics_summary.total_jira_tickets.comparison,
       colorClass: "bg-primary/10",
     },
@@ -85,7 +88,7 @@ export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryPro
       icon: <AlertTriangle className="h-5 w-5 text-warning" />,
       label: "High Priority Inactive",
       value: teamInsights.team_metrics_summary.high_priority_inactive.count,
-      change: parseDeltaPercent(teamInsights.team_metrics_summary.high_priority_inactive.delta_percent),
+      change: parseDeltaPercent(teamInsights.team_metrics_summary.high_priority_inactive?.delta_percent),
       changeLabel: teamInsights.team_metrics_summary.high_priority_inactive.comparison,
       colorClass: "bg-warning/10",
     },

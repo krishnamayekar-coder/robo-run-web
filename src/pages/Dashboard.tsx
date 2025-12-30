@@ -63,7 +63,7 @@ export default function Dashboard() {
   }, [widgets]);
 
   const widgetMap = useMemo(() => {
-    const map: Record<string, { component: React.ReactNode; column: "left" | "right" }> = {
+    const map: Record<string, { component: React.ReactNode; column: "left" | "right" | "bottom" }> = {
       "team-metrics": { component: <TeamMetricsSummary key="team-metrics" isPersonal={isMyDashboard} />, column: "left" },
       "risk-stats": { component: <RiskStatsWidget key="risk-stats" isPersonal={isMyDashboard} />, column: "left" },
       "current-work": { component: <CurrentWorkSnapshot key="current-work" isPersonal={isMyDashboard} />, column: "left" },
@@ -74,8 +74,8 @@ export default function Dashboard() {
       "ai-insights": { component: <AISummaryInsights key="ai-insights" isPersonal={isMyDashboard} />, column: "right" },
       "recent-activity": { component: <RecentActivity key="recent-activity" isPersonal={isMyDashboard} />, column: "right" },
       "confluence": { component: <ConfluenceContributions key="confluence" isPersonal={isMyDashboard} />, column: "right" },
-      "integrations": { component: <IntegrationSources key="integrations" isPersonal={isMyDashboard} />, column: "right" },
       "team-members": { component: <TeamMembers key="team-members" projectId={selectedProject} isPersonal={isMyDashboard} />, column: "right" },
+      "integrations": { component: <IntegrationSources key="integrations" isPersonal={isMyDashboard} />, column: "left" },
     };
     return map;
   }, [isMyDashboard, selectedProject]);
@@ -91,6 +91,14 @@ export default function Dashboard() {
   const rightWidgets = useMemo(() => {
     return widgets
       .filter(w => w.visible && widgetMap[w.id]?.column === "right")
+      .sort((a, b) => a.order - b.order)
+      .map(w => widgetMap[w.id]?.component)
+      .filter(Boolean);
+  }, [widgets, widgetMap]);
+
+  const bottomWidgets = useMemo(() => {
+    return widgets
+      .filter(w => w.visible && widgetMap[w.id]?.column === "bottom")
       .sort((a, b) => a.order - b.order)
       .map(w => widgetMap[w.id]?.component)
       .filter(Boolean);
@@ -210,6 +218,18 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+
+          {/* Bottom Section - Same width as Detailed Risk Detection (left column) */}
+          {bottomWidgets.length > 0 && (
+            <div className="mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  {bottomWidgets}
+                </div>
+                <div className="hidden lg:block"></div> {/* Spacer for right column */}
+              </div>
+            </div>
+          )}
         </main>
 
         <AIAssistant />
