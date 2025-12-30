@@ -127,14 +127,16 @@ export default function Dashboard() {
   }, [widgets, widgetMap]);
 
   const handleGenerateReport = () => {
-    toast({
-      title: "Report Generated",
+    try {
+      toast({
+        title: "Report Generated",
         description: `Your ${isDetailed ? 'detailed' : 'summary'} report has been downloaded successfully.`,
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as any;
       toast({
         title: "Error",
-        description: error?.data?.message || "Failed to generate report. Please try again.",
+        description: err?.data?.message || "Failed to generate report. Please try again.",
         variant: "destructive",
       });
     }

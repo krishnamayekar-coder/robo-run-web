@@ -15,6 +15,11 @@ import type {
   SyncIntegrationResponse,
   TeamMembersResponse,
   UsersDetailsResponse,
+  AISummaryResponse,
+  AIFactsRequest,
+  AIFactsResponse,
+  GenerateReportRequest,
+  GenerateReportResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://2qlyp5edzh.execute-api.us-east-1.amazonaws.com';
@@ -132,6 +137,13 @@ export const api = createApi({
         method: 'POST',
       }),
       invalidatesTags: ['IntegrationSources'],
+    }),
+    
+    generateReport: builder.query<GenerateReportResponse, GenerateReportRequest>({
+      query: ({ start_date, end_date, is_detailed }) => ({
+        url: '/reports/generate',
+        params: { start_date, end_date, is_detailed },
+      }),
     }),
     
     login: builder.mutation<LoginResponse, LoginRequest>({

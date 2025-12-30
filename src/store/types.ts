@@ -316,3 +316,38 @@ export interface UsersDetailsResponse {
   [key: string]: any; // Allow flexible response structure
 }
 
+// AI Summary Types
+export interface AISummaryResponse {
+  summary?: string;
+  recommendations?: Array<{
+    title: string;
+    text: string;
+    impact: string;
+  }>;
+  [key: string]: any;
+}
+
+export interface AIFactsRequest {
+  query: string;
+  context?: string;
+}
+
+export interface AIFactsResponse {
+  facts?: string[];
+  answer?: string;
+  [key: string]: any;
+}
+
+// Report Generation Types
+export interface GenerateReportRequest {
+  start_date: string;
+  end_date: string;
+  is_detailed?: boolean;
+}
+
+export interface GenerateReportResponse {
+  success: boolean;
+  message?: string;
+  [key: string]: any;
+}
+
