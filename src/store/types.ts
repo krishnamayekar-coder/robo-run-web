@@ -38,6 +38,7 @@ export interface PullRequest {
   head_sha: string;
   merged: boolean;
   timestamp: string;
+  review_status: string;
 }
 
 export interface GitRecentResponse {

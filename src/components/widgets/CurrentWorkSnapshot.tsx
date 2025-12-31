@@ -85,7 +85,7 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
   const prItems: WorkItem[] = gitData?.recent_pull_requests?.slice(0, 5).map((pr) => ({
     id: `#${pr.pr_number}`,
     title: pr.title,
-    priority: pr.state === "open" ? "high" : "medium",
+    priority: pr.review_status as "critical" | "high" | "medium" | "low",
     assignee: {
       name: pr.author_login || "Unknown",
       initials: getInitials(pr.author_login || "Unknown"),
