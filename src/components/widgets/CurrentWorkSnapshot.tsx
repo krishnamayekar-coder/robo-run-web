@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Clock, GitBranch, GitCommit, TicketCheck } from "lucide-react";
 import { useGetGitRecentQuery, useGetRecentActivityQuery } from "@/store/api";
 import { formatDistanceToNow } from "date-fns";
@@ -125,10 +126,17 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
 
   const WorkItemRow = ({ item }: { item: WorkItem }) => (
     <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer">
-      <Avatar className="h-8 w-8 border border-border">
-        <AvatarImage src={item.assignee.avatar} />
-        <AvatarFallback className="text-xs bg-primary/10 text-primary">{item.assignee.initials}</AvatarFallback>
-      </Avatar>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Avatar className="h-8 w-8 border border-border cursor-pointer">
+            <AvatarImage src={item.assignee.avatar} />
+            <AvatarFallback className="text-xs bg-primary/10 text-primary">{item.assignee.initials}</AvatarFallback>
+          </Avatar>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{item.assignee.name}</p>
+        </TooltipContent>
+      </Tooltip>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-muted-foreground">{item.id}</span>
@@ -151,16 +159,17 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
   );
 
   return (
-    <div className="widget animate-fade-in stagger-4">
-      <h2 className="widget-title">
-        <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-subtle" />
-        {isPersonal ? "My Work Snapshot" : "Current Work Snapshot"}
-      </h2>
+    <TooltipProvider delayDuration={0}>
+      <div className="widget animate-fade-in stagger-4">
+        <h2 className="widget-title">
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-subtle" />
+          {isPersonal ? "My Work Snapshot" : "Current Work Snapshot"}
+        </h2>
 
-      {isLoading ? (
-        <div className="text-sm text-muted-foreground p-3">Loading work items...</div>
-      ) : (
-        <Tabs defaultValue="jira" className="w-full">
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground p-3">Loading work items...</div>
+        ) : (
+          <Tabs defaultValue="jira" className="w-full">
           <div className="glass-card rounded-xl p-1.5 w-full mb-4">
             <TabsList className="w-full grid grid-cols-3 h-auto bg-transparent border-0 shadow-none p-0 gap-1">
               <TabsTrigger 
@@ -229,7 +238,8 @@ export function CurrentWorkSnapshot({ isPersonal = false }: CurrentWorkSnapshotP
             )}
           </TabsContent>
         </Tabs>
-      )}
-    </div>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }

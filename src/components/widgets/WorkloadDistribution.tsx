@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Users, AlertTriangle, Ticket, GitPullRequest, GitCommit, TicketCheck } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Users, AlertTriangle, Ticket, GitPullRequest, GitCommit, TicketCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { useGetWorkloadDistributionQuery } from "@/store/api";
 import {
   Sheet,
@@ -26,6 +28,7 @@ interface TeamMember {
 }
 
 export function WorkloadDistribution() {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { data: workloadData, isLoading } = useGetWorkloadDistributionQuery();
@@ -136,15 +139,30 @@ export function WorkloadDistribution() {
           <Users className="h-4 w-4 text-primary" />
           Sprint Load Overview
         </h2>
-        {overloadedCount !== null && overloadedCount > 0 && (
-          <Badge variant="outline" className="text-[10px] gap-1 priority-high">
-            <AlertTriangle className="h-3 w-3" />
-            {overloadedCount} overloaded
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {overloadedCount !== null && overloadedCount > 0 && (
+            <Badge variant="outline" className="text-[10px] gap-1 priority-high">
+              <AlertTriangle className="h-3 w-3" />
+              {overloadedCount} overloaded
+            </Badge>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-7 w-7 p-0"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
-      <div className="space-y-4 overflow-visible">
+      {isExpanded ? (
+        <div className="space-y-4 overflow-visible">
         {isLoading ? (
           <div className="text-sm text-muted-foreground p-3 text-center">
             Loading workload data...
@@ -219,8 +237,87 @@ export function WorkloadDistribution() {
             </div>
           ))
         )}
-      </div>
+        </div>
+      ) : (
+        <ScrollArea className="h-[400px]">
+          <div className="pr-4 py-1">
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground p-3 text-center mb-4">
+                Loading workload data...
+              </div>
+            ) : teamMembers.length === 0 ? (
+              <div className="text-sm text-muted-foreground p-3 text-center mb-4">
+                Sprint Load Overview data not available
+              </div>
+            ) : (
+              teamMembers.map((member, index) => (
+                <div 
+                  key={member.id} 
+                  onClick={() => handleMemberClick(member)}
+                  className={`p-3 rounded-lg glass-card transition-all hover:shadow-sm cursor-pointer ${index !== teamMembers.length - 1 ? 'mb-4' : ''}`}
+                >
+                  {/* Name + Role */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{member.name}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{member.role}</div>
+                    </div>
+                    {member.loadLabel && (
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <span 
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-block"
+                          >
+                            <Badge variant="outline" className="text-[10px] px-2 py-1 cursor-help">
+                              {member.loadLabel}
+                            </Badge>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent 
+                          side="top" 
+                          align="center"
+                          className="max-w-[180px] !z-[99999] whitespace-normal"
+                          sideOffset={8}
+                          alignOffset={0}
+                          avoidCollisions={true}
+                          collisionPadding={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                        >
+                          <p className="text-xs leading-relaxed whitespace-normal">
+                            {getLoadLabelTooltip(member.loadLabel)}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
 
+                  {/* Metrics */}
+                  <div className="flex items-center gap-4 text-xs mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <Ticket className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-foreground">{member.activeJiraTickets}</span>
+                      <span className="text-muted-foreground">Open Issues</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
+                      <span className="font-medium text-foreground">{member.highPriorityTickets}</span>
+                      <span className="text-muted-foreground">High Priority</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <GitPullRequest className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-foreground">{member.prsAwaitingReview}</span>
+                      <span className="text-muted-foreground">PRs Review</span>
+                    </div>
+                  </div>
+
+                  {/* Icons and Counts Row */}
+                
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      )}
 
       {/* Sheet for member details */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
