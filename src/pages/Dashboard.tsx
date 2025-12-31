@@ -7,7 +7,7 @@ import { CurrentWorkSnapshot } from "@/components/widgets/CurrentWorkSnapshot";
 import { WeeklyAnalyticsChart } from "@/components/widgets/WeeklyAnalyticsChart";
 import { AISummaryInsights } from "@/components/widgets/AISummaryInsights";
 import { WorkloadDistribution } from "@/components/widgets/WorkloadDistribution";
-import { RecentActivity } from "@/components/widgets/RecentActivity";
+// import { RecentActivity } from "@/components/widgets/RecentActivity";
 import { DetailedRiskDetection } from "@/components/widgets/DetailedRiskDetection";
 import { ConfluenceContributions } from "@/components/widgets/ConfluenceContributions";
 import { AIAssistant } from "@/components/widgets/AIAssistant";
@@ -39,7 +39,7 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "sprint-progress", name: "Sprint Progress", icon: "🏃", visible: true, order: 5 },
   { id: "workload", name: "Workload Distribution", icon: "👥", visible: true, order: 6 },
   { id: "ai-insights", name: "AI Summary Insights", icon: "✨", visible: true, order: 7 },
-  { id: "recent-activity", name: "Recent Activity", icon: "🕐", visible: true, order: 8 },
+  // { id: "recent-activity", name: "Recent Activity", icon: "🕐", visible: true, order: 8 },
   { id: "confluence", name: "Confluence Contributions", icon: "📝", visible: true, order: 9 },
   { id: "integrations", name: "Integration Sources", icon: "🔌", visible: true, order: 10 },
   { id: "team-members", name: "Team Members", icon: "👥", visible: true, order: 11 },
@@ -94,10 +94,10 @@ export default function Dashboard() {
       "sprint-progress": { component: <SprintProgress key="sprint-progress" isPersonal={isMyDashboard} />, column: "right" },
       "workload": { component: !isMyDashboard ? <WorkloadDistribution key="workload" /> : null, column: "right" },
       "ai-insights": { component: <AISummaryInsights key="ai-insights" isPersonal={isMyDashboard} />, column: "right" },
-      "recent-activity": { component: <RecentActivity key="recent-activity" isPersonal={isMyDashboard} />, column: "right" },
+      // "recent-activity": { component: <RecentActivity key="recent-activity" isPersonal={isMyDashboard} />, column: "right" },
       "confluence": { component: <ConfluenceContributions key="confluence" isPersonal={isMyDashboard} />, column: "right" },
       "team-members": { component: <TeamMembers key="team-members" projectId={selectedProject} />, column: "bottom" },
-      "integrations": { component: <IntegrationSources key="integrations" isPersonal={isMyDashboard} />, column: "bottom" },
+      "integrations": { component: <IntegrationSources key="integrations" />, column: "bottom" },
     };
     return map;
   }, [isMyDashboard, selectedProject]);
