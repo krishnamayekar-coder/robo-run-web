@@ -67,8 +67,13 @@ export const api = createApi({
       providesTags: ['SprintProgress'],
     }),
     
-    getTeamInsights: builder.query<TeamInsightsResponse, void>({
-      query: () => '/jira/team/insights',
+    getTeamInsights: builder.query<TeamInsightsResponse, { sprint_id: number }>({
+      query: ({ sprint_id }) => ({
+        url: '/jira/team/insights',
+        params: {
+          sprint_id: String(sprint_id),
+        },
+      }),
       providesTags: ['TeamInsights'],
     }),
     
@@ -90,8 +95,13 @@ export const api = createApi({
       providesTags: ['PRBottlenecks'],
     }),
     
-    getWorkloadDistribution: builder.query<WorkloadDistributionResponse, void>({
-      query: () => '/developers/workload',
+    getWorkloadDistribution: builder.query<WorkloadDistributionResponse, { sprint_id: number }>({
+      query: ({ sprint_id }) => ({
+        url: '/developers/workload',
+        params: {
+          sprint_id: String(sprint_id),
+        },
+      }),
       providesTags: ['WorkloadDistribution', 'SprintLoadOverview'],
     }),
     
@@ -222,4 +232,5 @@ export type {
   UserDetail,
   UsersDetailsResponse,
 } from './types';
+
 

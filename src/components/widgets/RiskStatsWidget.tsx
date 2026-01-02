@@ -1,5 +1,6 @@
 import { AlertCircle, Clock, Flame, GitPullRequest, TrendingUp, TrendingDown } from "lucide-react";
-import { useGetPRBottlenecksQuery, useGetTeamInsightsQuery } from "@/store/api";
+import { useGetPRBottlenecksQuery, useGetTeamInsightsQuery, useGetSprintProgressQuery } from "@/store/api";
+import { useMemo } from "react";
 
 interface RiskCardProps {
   icon: React.ReactNode;
@@ -47,8 +48,27 @@ interface RiskStatsWidgetProps {
 }
 
 export function RiskStatsWidget({ isPersonal = false }: RiskStatsWidgetProps) {
+  // Get sprint progress to find active sprint
+  const { data: sprintProgressData } = useGetSprintProgressQuery();
+  
+  // Extract active sprint_id
+  const activeSprintId = useMemo(() => {
+    if (sprintProgressData?.sprints) {
+      const activeSprint = sprintProgressData.sprints.find(sprint => sprint.state === "active");
+      return activeSprint?.sprint_id;
+    }
+    return undefined;
+  }, [sprintProgressData]);
+  
   const { data: bottlenecksData, isLoading: bottlenecksLoading } = useGetPRBottlenecksQuery();
-  const { data: teamInsights, isLoading: insightsLoading } = useGetTeamInsightsQuery();
+  
+  // Only call insights API if we have sprint_id
+  const { data: teamInsights, isLoading: insightsLoading } = useGetTeamInsightsQuery(
+    activeSprintId ? { sprint_id: activeSprintId } : { sprint_id: 0 },
+    {
+      skip: !activeSprintId,
+    }
+  );
 
   const isLoading = bottlenecksLoading || insightsLoading;
 

@@ -1,5 +1,6 @@
 import { TicketCheck, GitPullRequest, GitCommit, AlertTriangle, AlertOctagon, TrendingUp, TrendingDown } from "lucide-react";
-import { useGetTeamInsightsQuery, useGetGitRecentQuery } from "@/store/api";
+import { useGetTeamInsightsQuery, useGetGitRecentQuery, useGetSprintProgressQuery } from "@/store/api";
+import { useMemo } from "react";
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -44,7 +45,25 @@ interface TeamMetricsSummaryProps {
 }
 
 export function TeamMetricsSummary({ isPersonal = false }: TeamMetricsSummaryProps) {
-  const { data: teamInsights, isLoading: insightsLoading } = useGetTeamInsightsQuery();
+  // Get sprint progress to find active sprint
+  const { data: sprintProgressData } = useGetSprintProgressQuery();
+  
+  // Extract active sprint_id
+  const activeSprintId = useMemo(() => {
+    if (sprintProgressData?.sprints) {
+      const activeSprint = sprintProgressData.sprints.find(sprint => sprint.state === "active");
+      return activeSprint?.sprint_id;
+    }
+    return undefined;
+  }, [sprintProgressData]);
+  
+  // Only call insights API if we have sprint_id
+  const { data: teamInsights, isLoading: insightsLoading } = useGetTeamInsightsQuery(
+    activeSprintId ? { sprint_id: activeSprintId } : { sprint_id: 0 },
+    {
+      skip: !activeSprintId,
+    }
+  );
   const { data: gitData, isLoading: gitLoading } = useGetGitRecentQuery();
 
   const isLoading = insightsLoading || gitLoading;

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Users, AlertTriangle, Ticket, GitPullRequest, GitCommit, TicketCheck, ChevronDown, ChevronUp } from "lucide-react";
-import { useGetWorkloadDistributionQuery } from "@/store/api";
+import { useGetWorkloadDistributionQuery, useGetSprintProgressQuery } from "@/store/api";
 import {
   Sheet,
   SheetContent,
@@ -31,7 +31,26 @@ export function WorkloadDistribution() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const { data: workloadData, isLoading } = useGetWorkloadDistributionQuery();
+  
+  // Get sprint progress to find active sprint
+  const { data: sprintProgressData } = useGetSprintProgressQuery();
+  
+  // Extract active sprint_id
+  const activeSprintId = useMemo(() => {
+    if (sprintProgressData?.sprints) {
+      const activeSprint = sprintProgressData.sprints.find(sprint => sprint.state === "active");
+      return activeSprint?.sprint_id;
+    }
+    return undefined;
+  }, [sprintProgressData]);
+  
+  // Only call workload API if we have sprint_id
+  const { data: workloadData, isLoading } = useGetWorkloadDistributionQuery(
+    activeSprintId ? { sprint_id: activeSprintId } : { sprint_id: 0 },
+    {
+      skip: !activeSprintId,
+    }
+  );
   
   const workload = Array.isArray(workloadData) 
     ? workloadData 
